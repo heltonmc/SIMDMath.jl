@@ -129,3 +129,52 @@ horner4 = [1.00, 0.93, 1.21, 1.44, 3.30, 5.77, 4.69, 5.41, 5.65]
 horner8 = [0.68, 0.84, 0.95, 1.26, 3.05, 6.37, 6.98, 8.76, 9.45]
 ```
 Asymptotically, we can see that the method approaches a 2, 4, and 8x increase respecitively for large degrees, however, for smaller degrees the advanges are more complex. Therefore, it is encouraged to test the performance for individual cases. Of course, this depends on statically knowing the polynomial size during compilation which allows for packing the coefficients in the most efficient way.
+
+### Case 3: Evaluating a polynomial in Chebyshev basis.
+
+Similar to the first case evaluating many different polynomials this is also important when using a Chebyshev basis particularly in 2D problems. A simple comparison is the following...
+
+```julia
+# define scalar version
+function clenshaw_chebyshev(x, c)
+    x2 = 2x
+    c0 = c[end-1]
+    c1 = c[end]
+    for i in length(c)-2:-1:1
+        c0, c1 = c[i] - c1, c0 + c1 * x2
+    end
+    return c0 + c1 * x
+end
+
+# scalar version evaluating single polynomial
+julia> @benchmark clenshaw_chebyshev(x, (1.2, 1.2, 1.3, 1.5, 1.6, 1.8, 1.9, 2.1, 2.2, 2.3, 2.5, 1.3, 1.5, 1.6, 1.8, 1.9, 2.1, 2.2)) setup=(x=rand())
+BenchmarkTools.Trial: 10000 samples with 1000 evaluations.
+ Range (min … max):  7.041 ns … 24.583 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     7.166 ns              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   7.173 ns ±  0.384 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+                         ▂          █                         
+  ▂▁▁▁▁▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁█▁▁▁▁▁▁▁▁▁▁█▁▁▁▁▁▁▁▁▁▁▁▃▁▁▁▁▁▁▁▁▁▁▃ ▂
+  7.04 ns        Histogram: frequency by time        7.25 ns <
+
+ Memory estimate: 0 bytes, allocs estimate: 0.
+
+# SIMD version evaluating two polynomials...
+julia> const P2 =  SIMDMath.pack_horner(((1.2, 1.2, 1.3, 1.5, 1.6, 1.8, 1.9, 2.1, 2.2, 2.3, 2.5, 1.3, 1.5, 1.6, 1.8, 1.9, 2.1, 2.2), (2.4, 1.3, 1.5, 1.6, 1.8, 1.9, 2.1, 2.2, 2.1, 2.6, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8)))
+((VecElement{Float64}(1.2), VecElement{Float64}(2.4)), (VecElement{Float64}(1.2), VecElement{Float64}(1.3)), (VecElement{Float64}(1.3), VecElement{Float64}(1.5)), (VecElement{Float64}(1.5), VecElement{Float64}(1.6)), (VecElement{Float64}(1.6), VecElement{Float64}(1.8)), (VecElement{Float64}(1.8), VecElement{Float64}(1.9)), (VecElement{Float64}(1.9), VecElement{Float64}(2.1)), (VecElement{Float64}(2.1), VecElement{Float64}(2.2)), (VecElement{Float64}(2.2), VecElement{Float64}(2.1)), (VecElement{Float64}(2.3), VecElement{Float64}(2.6)), (VecElement{Float64}(2.5), VecElement{Float64}(2.1)), (VecElement{Float64}(1.3), VecElement{Float64}(2.2)), (VecElement{Float64}(1.5), VecElement{Float64}(2.3)), (VecElement{Float64}(1.6), VecElement{Float64}(2.4)), (VecElement{Float64}(1.8), VecElement{Float64}(2.5)), (VecElement{Float64}(1.9), VecElement{Float64}(2.6)), (VecElement{Float64}(2.1), VecElement{Float64}(2.7)), (VecElement{Float64}(2.2), VecElement{Float64}(2.8)))
+
+julia> @benchmark SIMDMath.clenshaw_simd(x, P2) setup=(x=rand())
+BenchmarkTools.Trial: 10000 samples with 1000 evaluations.
+ Range (min … max):  4.291 ns … 24.000 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     4.416 ns              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   4.415 ns ±  0.368 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+             ▂           █          █           ▃          ▂ ▂
+  ▅▁▁▁▁▁▁▁▁▁▁█▁▁▁▁▁▁▁▁▁▁▁█▁▁▁▁▁▁▁▁▁▁█▁▁▁▁▁▁▁▁▁▁▁█▁▁▁▁▁▁▁▁▁▁█ █
+  4.29 ns      Histogram: log(frequency) by time      4.5 ns <
+
+ Memory estimate: 0 bytes, allocs estimate: 0.
+ ```
+
+ Computing two Chebyshev polynomials is actually faster than the single polynomial case. The coefficients are packed more efficiently and the operations are not done in the same order. This leads to a speed up, however, because of the non-associativity of floating point arithmetic they will slightly differ. One is not neccessarily more accurate and should be tested for your use case.
+ 
