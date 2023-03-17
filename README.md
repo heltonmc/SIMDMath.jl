@@ -54,7 +54,7 @@ julia> using Bessels.SIMDMath
 @inline function test_simd(x)
        x2 = x * x
        x3 = x2 * x
-       p = horner_simd(x3, pack_horner(P...))
+       p = horner_simd(x3, pack_horner(P))
        return muladd(x, -p[2].value, p[1].value), muladd(x2, p[4].value, -p[3].value)
 end
 
