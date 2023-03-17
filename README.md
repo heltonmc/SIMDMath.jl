@@ -4,8 +4,9 @@
 [![Coverage](https://codecov.io/gh/heltonmc/SIMDMath.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/heltonmc/SIMDMath.jl)
 
 
-A lightweight module for explicit vectorization of simple math functions. The focus is mainly on vectorizing polynomial evaluation in two main cases: (1) evaluating many different polynomials of similar length and (2) evaluating a single large polynomial.
+A lightweight module for explicit vectorization of simple math functions. The focus is mainly on vectorizing polynomial evaluation in two main cases: (1) evaluating many different polynomials of similar length and (2) evaluating a single large polynomial. It is primary used for vectorizing Bessel function evaluation in [Bessels.jl](https://github.com/JuliaMath/Bessels.jl).
 This module is for statically known functions where the coefficients are unrolled and the size of the tuples is known at compilation. For more advanced needs it will be better to use SIMD.jl or LoopVectorization.jl.
+[SIMDPoly.jl](https://github.com/augustt198/SIMDPoly.jl) is a similar package utilizing SIMD.jl.
 
 ### Case 1: Evaluating many different polynomials.
 
