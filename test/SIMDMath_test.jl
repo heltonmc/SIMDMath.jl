@@ -1,7 +1,6 @@
-using SIMDMath
+using Bessels.SIMDMath
 using Test
 
-@time @testset "SIMDMath.jl" begin
 
 # Test horner_simd
 let
@@ -110,6 +109,4 @@ let
         @test clen(x, P[3]) ≈ a[3].value
         @test clen(x, P[4]) ≈ a[4].value
     end
-end
-
 end

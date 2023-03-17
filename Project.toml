@@ -1,6 +1,6 @@
 name = "SIMDMath"
 uuid = "5443be0b-e40a-4f70-a07e-dcd652efc383"
-authors = ["Michael Helton <heltonmc@protonmail.com> and contributors"]
+authors = ["Michael Helton and contributors"]
 version = "0.1.0"
 
 [compat]
