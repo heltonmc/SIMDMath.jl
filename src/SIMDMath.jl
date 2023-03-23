@@ -20,6 +20,7 @@ export clenshaw_simd
 const VE = Base.VecElement
 const FloatTypes = Union{Float16, Float32, Float64}
 const LVec{N, FloatTypes} = NTuple{N, VE{FloatTypes}}
+const CVec{N, FloatTypes} = NTuple{2, LVec{N, FloatTypes}}
 const ScalarTypes = Union{VE{FloatTypes}, FloatTypes}
 
 const LLVMType = Dict{DataType, String}(
@@ -30,5 +31,6 @@ const LLVMType = Dict{DataType, String}(
 
 include("arithmetic.jl")
 include("horner.jl")
+include("complex.jl")
 
 end

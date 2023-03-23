@@ -39,6 +39,17 @@ end
         )
 end
 
+@inline @generated function _mulsub(x::LVec{N, T}, y::LVec{N, T}, z::LVec{N, T}) where {N, T <: FloatTypes}
+    s = """
+        %4 = fmul contract <$N x $(LLVMType[T])> %0, %1
+        %5 = fsub contract <$N x $(LLVMType[T])> %4, %2
+        ret <$N x $(LLVMType[T])> %5
+        """
+    return :(
+        llvmcall($s, LVec{N, T}, Tuple{LVec{N, T}, LVec{N, T}, LVec{N, T}}, x, y, z)
+        )
+end
+
 for f in (:fadd, :fsub, :fmul, :fdiv)
     @eval @inline @generated function $f(x::LVec{N, T}, y::LVec{N, T}) where {N, T <: FloatTypes}
         ff = $(QuoteNode(f))
