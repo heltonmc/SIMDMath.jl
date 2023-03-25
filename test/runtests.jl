@@ -15,10 +15,10 @@ let
     
     x = 0.9
     a = horner_simd(x, pack_horner(P))
-    @test evalpoly(x, P[1]) == a[1].value
-    @test evalpoly(x, P[2]) == a[2].value
-    @test evalpoly(x, P[3]) == a[3].value
-    @test evalpoly(x, P[4]) == a[4].value
+    @test evalpoly(x, P[1]) == a.data[1].value
+    @test evalpoly(x, P[2]) == a.data[2].value
+    @test evalpoly(x, P[3]) == a.data[3].value
+    @test evalpoly(x, P[4]) == a.data[4].value
 
     NT = 24
     P32 = (
@@ -34,14 +34,14 @@ let
     
     x = 1.2f0
     a = horner_simd(x, pack_horner(P32))
-    @test evalpoly(x, P32[1]) == a[1].value
-    @test evalpoly(x, P32[2]) == a[2].value
-    @test evalpoly(x, P32[3]) == a[3].value
-    @test evalpoly(x, P32[4]) == a[4].value
-    @test evalpoly(x, P32[5]) == a[5].value
-    @test evalpoly(x, P32[6]) == a[6].value
-    @test evalpoly(x, P32[7]) == a[7].value
-    @test evalpoly(x, P32[8]) == a[8].value
+    @test evalpoly(x, P32[1]) == a.data[1].value
+    @test evalpoly(x, P32[2]) == a.data[2].value
+    @test evalpoly(x, P32[3]) == a.data[3].value
+    @test evalpoly(x, P32[4]) == a.data[4].value
+    @test evalpoly(x, P32[5]) == a.data[5].value
+    @test evalpoly(x, P32[6]) == a.data[6].value
+    @test evalpoly(x, P32[7]) == a.data[7].value
+    @test evalpoly(x, P32[8]) == a.data[8].value
 
     NT = 4
     P16 = (
@@ -52,10 +52,9 @@ let
     
     x = Float16(0.8)
     a = horner_simd(x, pack_horner(P16))
-    @test evalpoly(x, P16[1]) ≈ a[1].value
-    @test evalpoly(x, P16[2]) ≈ a[2].value
-    @test evalpoly(x, P16[3]) ≈ a[3].value
-
+    @test evalpoly(x, P16[1]) ≈ a.data[1].value
+    @test evalpoly(x, P16[2]) ≈ a.data[2].value
+    @test evalpoly(x, P16[3]) ≈ a.data[3].value
 end
 
 # test second, fourth, and eighth order horner schemes
@@ -105,10 +104,10 @@ let
         # some small tests showed the SIMD case ordering was slightly more accurate
         # the SIMD case using this instruction is also faster than even a single evaluation
         a = clenshaw_simd(x, pack_horner(P))
-        @test clen(x, P[1]) ≈ a[1].value
-        @test clen(x, P[2]) ≈ a[2].value
-        @test clen(x, P[3]) ≈ a[3].value
-        @test clen(x, P[4]) ≈ a[4].value
+        @test clen(x, P[1]) ≈ a.data[1].value
+        @test clen(x, P[2]) ≈ a.data[2].value
+        @test clen(x, P[3]) ≈ a.data[3].value
+        @test clen(x, P[4]) ≈ a.data[4].value
     end
 end
 
