@@ -11,48 +11,28 @@
 #
 
 # complex multiply
-@inline function fmul(x::CVec{N, FloatTypes}, y::CVec{N, FloatTypes}) where {N, FloatTypes}
-    (a, b) = (x[1], x[2])
-    (c, d) = (y[1], y[2])
-    re = _muladd(a, c, fmul(b, d))
-    im = _mulsub(b, c, fmul(c, d))
-    return CVec{N, FloatTypes}((re, im))
+@inline function fmul(x::ComplexVec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}) where {N, FloatTypes}
+    r = _mulsub(x.re, y.re, fmul(x.im, y.im))
+    i = _muladd(x.re, y.im, fmul(x.im, y.re))
+    return ComplexVec(r, i)
 end
 
 # complex add
-@inline function fadd(x::CVec{N, FloatTypes}, y::CVec{N, FloatTypes}) where {N, FloatTypes}
-    re = fadd(x[1], y[1])
-    im = fadd(x[2], y[2])
-    return CVec{N, FloatTypes}((re, im))
+@inline function fadd(x::ComplexVec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}) where {N, FloatTypes}
+    re = fadd(x.re, y.re)
+    im = fadd(x.im, y.im)
+    return ComplexVec(re, im)
 end
 
 # complex add
-@inline function fsub(x::CVec{N, FloatTypes}, y::CVec{N, FloatTypes}) where {N, FloatTypes}
-    re = fsub(x[1], y[1])
-    im = fsub(x[2], y[2])
-    return CVec{N, FloatTypes}((re, im))
+@inline function fsub(x::ComplexVec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}) where {N, FloatTypes}
+    re = fsub(x.re, y.re)
+    im = fsub(x.im, y.im)
+    return ComplexVec{N, FloatTypes}((re, im))
 end
 
 # complex multiply-add
-@inline function muladd(x::CVec{N, FloatTypes}, y::CVec{N, FloatTypes}, z::CVec{N, FloatTypes}) where {N, FloatTypes}
-    (a, b) = (x[1], x[2])
-    (c, d) = (y[1], y[2])
-    (e, f) = (z[1], z[2])
-    re = _muladd(a, c, fmul(b, d))
-    im = _mulsub(b, c, fmul(c, d))
-    re = fadd(re, e)
-    im = fadd(im, f)
-    return CVec{N, FloatTypes}((re, im))
-end
+@inline muladd(x::ComplexVec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}, z::ComplexVec{N, FloatTypes}) where {N, FloatTypes} = fadd(fmul(x, y), z)
 
 # complex multiply-subtract
-@inline function mulsub(x::CVec{N, FloatTypes}, y::CVec{N, FloatTypes}, z::CVec{N, FloatTypes}) where {N, FloatTypes}
-    (a, b) = (x[1], x[2])
-    (c, d) = (y[1], y[2])
-    (e, f) = (z[1], z[2])
-    re = _muladd(a, c, fmul(b, d))
-    im = _mulsub(b, c, fmul(c, d))
-    re = fsub(re, e)
-    im = fsub(im, f)
-    return CVec{N, FloatTypes}((re, im))
-end
+@inline mulsub(x::ComplexVec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}, z::ComplexVec{N, FloatTypes}) where {N, FloatTypes} = fsub(fmul(x, y), z)
