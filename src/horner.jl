@@ -103,8 +103,8 @@ end
     x2 = x * x
     x4 = x2 * x2
     p = horner_simd(x4, P)
-    a0 = Vec(shufflevector(p.data, Val((0, 1))))
-    b0 = Vec(shufflevector(p.data, Val((2, 3))))
+    a0 = Vec(shufflevector(p.data, Val(0:1)))
+    b0 = Vec(shufflevector(p.data, Val(2:3)))
     p1 = horner_simd(x2, (a0, b0))
     a1 = Vec(shufflevector(p1.data, Val(0)))
     b1 = Vec(shufflevector(p1.data, Val(1)))
@@ -117,12 +117,12 @@ end
     x8 = x4 * x4
 
     p0 = horner_simd(x8, P)
-    a0 = Vec(shufflevector(p0.data, Val((0, 1, 2, 3))))
-    b0 = Vec(shufflevector(p0.data, Val((4, 5, 6, 7))))
+    a0 = Vec(shufflevector(p0.data, Val(0:3)))
+    b0 = Vec(shufflevector(p0.data, Val(4:7)))
 
     p1 = horner_simd(x4, (a0, b0))
-    a1 = Vec(shufflevector(p1.data, Val((0, 1))))
-    b1 = Vec(shufflevector(p1.data, Val((2, 3))))
+    a1 = Vec(shufflevector(p1.data, Val(0:1)))
+    b1 = Vec(shufflevector(p1.data, Val(2:3)))
 
     p2 = horner_simd(x2, (a1, b1))
     a2 = Vec(shufflevector(p2.data, Val(0)))
@@ -138,16 +138,16 @@ end
     x16 = x8 * x8
 
     p0 = horner_simd(x16, P)
-    a0 = Vec(shufflevector(p0.data, Val((0, 1, 2, 3, 4, 5, 6, 7))))
-    b0 = Vec(shufflevector(p0.data, Val((8, 9, 10, 11, 12, 13, 14, 15))))
+    a0 = Vec(shufflevector(p0.data, Val(0:7)))
+    b0 = Vec(shufflevector(p0.data, Val(8:15)))
 
     p1 = horner_simd(x8, (a0, b0))
-    a1 = Vec(shufflevector(p1.data, Val((0, 1, 2, 3))))
-    b1 = Vec(shufflevector(p1.data, Val((4, 5, 6, 7))))
+    a1 = Vec(shufflevector(p1.data, Val(0:3)))
+    b1 = Vec(shufflevector(p1.data, Val(4:7)))
 
     p2 = horner_simd(x4, (a1, b1))
-    a2 = Vec(shufflevector(p2.data, Val((0, 1))))
-    b2 = Vec(shufflevector(p2.data, Val((2, 3))))
+    a2 = Vec(shufflevector(p2.data, Val(0:1)))
+    b2 = Vec(shufflevector(p2.data, Val(2:3)))
 
     p3 = horner_simd(x2, (a2, b2))
     a3 = Vec(shufflevector(p3.data, Val(0)))
@@ -164,20 +164,20 @@ end
     x32 = x16 * x16
 
     p0 = horner_simd(x32, P)
-    a0 = Vec(shufflevector(p0.data, Val((0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15))))
-    b0 = Vec(shufflevector(p0.data, Val((16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31))))
+    a0 = Vec(shufflevector(p0.data, Val(0:15)))
+    b0 = Vec(shufflevector(p0.data, Val(16:31)))
 
     p1 = horner_simd(x16, (a0, b0))
-    a1 = Vec(shufflevector(p1.data, Val((0, 1, 2, 3, 4, 5, 6, 7))))
-    b1 = Vec(shufflevector(p1.data, Val((8, 9, 10, 11, 12, 13, 14, 15))))
+    a1 = Vec(shufflevector(p1.data, Val(0:7)))
+    b1 = Vec(shufflevector(p1.data, Val(8:15)))
 
     p2 = horner_simd(x8, (a1, b1))
-    a2 = Vec(shufflevector(p2.data, Val((0, 1, 2, 3))))
-    b2 = Vec(shufflevector(p2.data, Val((4, 5, 6, 7))))
+    a2 = Vec(shufflevector(p2.data, Val(0:3)))
+    b2 = Vec(shufflevector(p2.data, Val(4:7)))
 
     p3 = horner_simd(x4, (a2, b2))
-    a3 = Vec(shufflevector(p3.data, Val((0, 1))))
-    b3 = Vec(shufflevector(p3.data, Val((2, 3))))
+    a3 = Vec(shufflevector(p3.data, Val(0:1)))
+    b3 = Vec(shufflevector(p3.data, Val(2:3)))
 
     p4 = horner_simd(x2, (a3, b3))
     a4 = Vec(shufflevector(p4.data, Val(0)))
