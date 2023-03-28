@@ -14,11 +14,11 @@ let
             )
     
     x = 0.9
-    a = horner_simd(x, pack_horner(P))
-    @test evalpoly(x, P[1]) == a[1].value
-    @test evalpoly(x, P[2]) == a[2].value
-    @test evalpoly(x, P[3]) == a[3].value
-    @test evalpoly(x, P[4]) == a[4].value
+    a = horner_simd(x, pack_poly(P))
+    @test evalpoly(x, P[1]) == a.data[1].value
+    @test evalpoly(x, P[2]) == a.data[2].value
+    @test evalpoly(x, P[3]) == a.data[3].value
+    @test evalpoly(x, P[4]) == a.data[4].value
 
     NT = 24
     P32 = (
@@ -33,15 +33,15 @@ let
             )
     
     x = 1.2f0
-    a = horner_simd(x, pack_horner(P32))
-    @test evalpoly(x, P32[1]) == a[1].value
-    @test evalpoly(x, P32[2]) == a[2].value
-    @test evalpoly(x, P32[3]) == a[3].value
-    @test evalpoly(x, P32[4]) == a[4].value
-    @test evalpoly(x, P32[5]) == a[5].value
-    @test evalpoly(x, P32[6]) == a[6].value
-    @test evalpoly(x, P32[7]) == a[7].value
-    @test evalpoly(x, P32[8]) == a[8].value
+    a = horner_simd(x, pack_poly(P32))
+    @test evalpoly(x, P32[1]) == a.data[1].value
+    @test evalpoly(x, P32[2]) == a.data[2].value
+    @test evalpoly(x, P32[3]) == a.data[3].value
+    @test evalpoly(x, P32[4]) == a.data[4].value
+    @test evalpoly(x, P32[5]) == a.data[5].value
+    @test evalpoly(x, P32[6]) == a.data[6].value
+    @test evalpoly(x, P32[7]) == a.data[7].value
+    @test evalpoly(x, P32[8]) == a.data[8].value
 
     NT = 4
     P16 = (
@@ -51,11 +51,10 @@ let
             )
     
     x = Float16(0.8)
-    a = horner_simd(x, pack_horner(P16))
-    @test evalpoly(x, P16[1]) ≈ a[1].value
-    @test evalpoly(x, P16[2]) ≈ a[2].value
-    @test evalpoly(x, P16[3]) ≈ a[3].value
-
+    a = horner_simd(x, pack_poly(P16))
+    @test evalpoly(x, P16[1]) ≈ a.data[1].value
+    @test evalpoly(x, P16[2]) ≈ a.data[2].value
+    @test evalpoly(x, P16[3]) ≈ a.data[3].value
 end
 
 # test second, fourth, and eighth order horner schemes
@@ -64,16 +63,16 @@ end
 let
     for N in [2, 3, 4, 5, 6, 7, 10, 13, 17, 20, 52, 89], x in [0.1, 0.5, 1.5, 4.2, 45.0]
         poly = ntuple(n -> rand()*(-1)^n / n, N)
-        @test evalpoly(x, poly) ≈ horner2(x, pack_horner2(poly)) ≈ horner4(x, pack_horner4(poly)) ≈ horner8(x, pack_horner8(poly))
+        @test evalpoly(x, poly) ≈ horner(x, pack_horner(poly, Val(2))) ≈ horner(x, pack_horner(poly, Val(4))) ≈ horner(x, pack_horner(poly, Val(8))) ≈ horner(x, pack_horner(poly, Val(16))) ≈ horner(x, pack_horner(poly, Val(32)))
     end
     for N in [2, 3, 4, 5, 6, 7, 10], x32 in [0.1f0, 0.8f0, 2.4f0, 8.0f0, 25.0f0]
         poly32 = ntuple(n -> Float32(rand()*(-1)^n / n), N)
-        @test evalpoly(x32, poly32) ≈ horner2(x32, pack_horner2(poly32)) ≈ horner4(x32, pack_horner4(poly32)) ≈ horner8(x32, pack_horner8(poly32))
+        @test evalpoly(x32, poly32) ≈ horner(x32, pack_horner(poly32, Val(2))) ≈ horner(x32, pack_horner(poly32, Val(4))) ≈ horner(x32, pack_horner(poly32, Val(8))) ≈ horner(x32, pack_horner(poly32, Val(16))) ≈ horner(x32, pack_horner(poly32, Val(32)))
     end
     for N in [2, 3, 4, 5, 6], x in [0.1, 0.5, 2.2]
         poly16 = ntuple(n -> Float16(rand()*(-1)^n / n), N)
         x16 = Float16.(x)
-        @test evalpoly(x16, poly16) ≈ horner2(x16, pack_horner2(poly16)) ≈ horner4(x16, pack_horner4(poly16)) ≈ horner8(x16, pack_horner8(poly16))
+        @test evalpoly(x16, poly16) ≈ horner(x16, pack_horner(poly16, Val(2))) ≈ horner(x16, pack_horner(poly16, Val(4))) ≈ horner(x16, pack_horner(poly16, Val(8))) ≈ horner(x16, pack_horner(poly16, Val(16)))
     end
 
 end
@@ -104,12 +103,59 @@ let
         # where the non-simd case sometimes chooses to reorder this in the native code generation
         # some small tests showed the SIMD case ordering was slightly more accurate
         # the SIMD case using this instruction is also faster than even a single evaluation
-        a = clenshaw_simd(x, pack_horner(P))
-        @test clen(x, P[1]) ≈ a[1].value
-        @test clen(x, P[2]) ≈ a[2].value
-        @test clen(x, P[3]) ≈ a[3].value
-        @test clen(x, P[4]) ≈ a[4].value
+        a = clenshaw_simd(x, pack_poly(P))
+        @test clen(x, P[1]) ≈ a.data[1].value
+        @test clen(x, P[2]) ≈ a.data[2].value
+        @test clen(x, P[3]) ≈ a.data[3].value
+        @test clen(x, P[4]) ≈ a.data[4].value
     end
+end
+
+
+# test complex
+
+let
+    p = complex.(ntuple(i->rand(), 2), ntuple(i->rand(), 2))
+    p2 = complex.(ntuple(i->rand(), 2), ntuple(i->rand(), 2))
+
+    pc = SIMDMath.ComplexVec(p)
+    pc2 = SIMDMath.ComplexVec(p2)
+
+    pcmul = SIMDMath.fmul(pc, pc2)
+    pmul = p .* p2
+    @test pcmul.re[1].value ≈ pmul[1].re
+    @test pcmul.im[1].value ≈ pmul[1].im
+    @test pcmul.re[2].value ≈ pmul[2].re
+    @test pcmul.im[2].value ≈ pmul[2].im
+
+    pcmul = SIMDMath.fadd(pc, pc2)
+    pmul = p .+ p2
+    @test pcmul.re[1].value ≈ pmul[1].re
+    @test pcmul.im[1].value ≈ pmul[1].im
+    @test pcmul.re[2].value ≈ pmul[2].re
+    @test pcmul.im[2].value ≈ pmul[2].im
+
+    pcmul = SIMDMath.fsub(pc, pc2)
+    pmul = p .- p2
+    @test pcmul.re[1].value ≈ pmul[1].re
+    @test pcmul.im[1].value ≈ pmul[1].im
+    @test pcmul.re[2].value ≈ pmul[2].re
+    @test pcmul.im[2].value ≈ pmul[2].im
+
+    pcmul = SIMDMath.muladd(pc, pc2, pc)
+    pmul = muladd.(p, p2, p)
+    @test pcmul.re[1].value ≈ pmul[1].re
+    @test pcmul.im[1].value ≈ pmul[1].im
+    @test pcmul.re[2].value ≈ pmul[2].re
+    @test pcmul.im[2].value ≈ pmul[2].im
+
+    pcmul = SIMDMath.mulsub(pc, pc2, pc)
+    pmul = @. p*p2 - p
+    @test pcmul.re[1].value ≈ pmul[1].re
+    @test pcmul.im[1].value ≈ pmul[1].im
+    @test pcmul.re[2].value ≈ pmul[2].re
+    @test pcmul.im[2].value ≈ pmul[2].im
+
 end
 
 end

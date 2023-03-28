@@ -10,25 +10,16 @@
 module SIMDMath
 
 using Base: llvmcall, VecElement
+using Base.Cartesian: @ntuple, @nexprs
 
-export horner_simd, pack_horner
-export horner, horner2, horner4, horner8
-export pack_horner2, pack_horner4, pack_horner8
+export horner_simd, pack_poly
+export horner, pack_horner
 
 export clenshaw_simd
 
-const VE = Base.VecElement
-const FloatTypes = Union{Float16, Float32, Float64}
-const LVec{N, FloatTypes} = NTuple{N, VE{FloatTypes}}
-const ScalarTypes = Union{VE{FloatTypes}, FloatTypes}
-
-const LLVMType = Dict{DataType, String}(
-    Float16  => "half",
-    Float32  => "float",
-    Float64  => "double",
-)
-
+include("types.jl")
 include("arithmetic.jl")
 include("horner.jl")
+include("complex.jl")
 
 end
