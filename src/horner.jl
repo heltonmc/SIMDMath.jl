@@ -12,33 +12,33 @@
 # x = 1.1
 # P1 = (1.1, 1.2, 1.4, 1.5)
 # P2 = (1.3, 1.3, 1.6, 1.8)
-# a = horner_simd(x, pack_horner((P1, P2)))
+# a = horner_simd(x, pack_poly((P1, P2)))
 # a[1].value == evalpoly(x, P1)
 # a[2].value == evalpoly(x, P2)
 #
 # Note the strict equality as this method doesn't alter the order of individual polynomial evaluations
 #
 
+@inline pack_poly(P::Tuple{Vararg{NTuple{M, T}, N}}) where {N, M, T} = ntuple(i -> Vec{N, T}((ntuple(j -> P[j][i], Val(N)))), Val(M))
+
 # cast single element `x` to a width of the number of polynomials
 @inline horner_simd(x::Union{T, VE{T}}, p::NTuple{N, Vec{M, T}}) where {N, M, T} = horner_simd(constantvector(x, Vec{M, T}), p)
 
 @inline function horner_simd(x::Vec{M, T}, p::NTuple{N, Vec{M, T}}) where {N, M, T <: FloatTypes}
     a = p[end]
-    @inbounds for i in N-1:-1:1
+    for i in N-1:-1:1
         a = muladd(x, a, p[i])
     end
     return a
 end
 
-@inline pack_horner(P::Tuple{Vararg{NTuple{M, T}, N}}) where {N, M, T} = ntuple(i -> Vec{N, T}((ntuple(j -> P[j][i], Val(N)))), Val(M))
-
-# need to add multiply/add/subtract commands
-# finish of clenshaw_simd algorithm
+# Clenshaw recurrence scheme to evaluate Chebyshev polynomials
+# Assumes arguments x is prescaled
 @inline function clenshaw_simd(x::T, c::NTuple{N, Vec{M, T}}) where {N, M, T <: FloatTypes}
     x2 = constantvector(2*x, Vec{M, T})
     c0 = c[end-1]
     c1 = c[end]
-    @inbounds for i in length(c)-2:-1:1
+    for i in length(c)-2:-1:1
         c0, c1 = fsub(c[i], c1), muladd(x2, c1, c0)
     end
     return muladd(x, c1, c0)

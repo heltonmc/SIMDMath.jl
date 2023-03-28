@@ -14,7 +14,7 @@ let
             )
     
     x = 0.9
-    a = horner_simd(x, pack_horner(P))
+    a = horner_simd(x, pack_poly(P))
     @test evalpoly(x, P[1]) == a.data[1].value
     @test evalpoly(x, P[2]) == a.data[2].value
     @test evalpoly(x, P[3]) == a.data[3].value
@@ -33,7 +33,7 @@ let
             )
     
     x = 1.2f0
-    a = horner_simd(x, pack_horner(P32))
+    a = horner_simd(x, pack_poly(P32))
     @test evalpoly(x, P32[1]) == a.data[1].value
     @test evalpoly(x, P32[2]) == a.data[2].value
     @test evalpoly(x, P32[3]) == a.data[3].value
@@ -51,7 +51,7 @@ let
             )
     
     x = Float16(0.8)
-    a = horner_simd(x, pack_horner(P16))
+    a = horner_simd(x, pack_poly(P16))
     @test evalpoly(x, P16[1]) ≈ a.data[1].value
     @test evalpoly(x, P16[2]) ≈ a.data[2].value
     @test evalpoly(x, P16[3]) ≈ a.data[3].value
@@ -103,7 +103,7 @@ let
         # where the non-simd case sometimes chooses to reorder this in the native code generation
         # some small tests showed the SIMD case ordering was slightly more accurate
         # the SIMD case using this instruction is also faster than even a single evaluation
-        a = clenshaw_simd(x, pack_horner(P))
+        a = clenshaw_simd(x, pack_poly(P))
         @test clen(x, P[1]) ≈ a.data[1].value
         @test clen(x, P[2]) ≈ a.data[2].value
         @test clen(x, P[3]) ≈ a.data[3].value
