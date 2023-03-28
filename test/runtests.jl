@@ -111,4 +111,51 @@ let
     end
 end
 
+
+# test complex
+
+let
+    p = complex.(ntuple(i->rand(), 2), ntuple(i->rand(), 2))
+    p2 = complex.(ntuple(i->rand(), 2), ntuple(i->rand(), 2))
+
+    pc = SIMDMath.ComplexVec(p)
+    pc2 = SIMDMath.ComplexVec(p2)
+
+    pcmul = SIMDMath.fmul(pc, pc2)
+    pmul = p .* p2
+    @test pcmul.re[1].value ≈ pmul[1].re
+    @test pcmul.im[1].value ≈ pmul[1].im
+    @test pcmul.re[2].value ≈ pmul[2].re
+    @test pcmul.im[2].value ≈ pmul[2].im
+
+    pcmul = SIMDMath.fadd(pc, pc2)
+    pmul = p .+ p2
+    @test pcmul.re[1].value ≈ pmul[1].re
+    @test pcmul.im[1].value ≈ pmul[1].im
+    @test pcmul.re[2].value ≈ pmul[2].re
+    @test pcmul.im[2].value ≈ pmul[2].im
+
+    pcmul = SIMDMath.fsub(pc, pc2)
+    pmul = p .- p2
+    @test pcmul.re[1].value ≈ pmul[1].re
+    @test pcmul.im[1].value ≈ pmul[1].im
+    @test pcmul.re[2].value ≈ pmul[2].re
+    @test pcmul.im[2].value ≈ pmul[2].im
+
+    pcmul = SIMDMath.muladd(pc, pc2, pc)
+    pmul = muladd.(p, p2, p)
+    @test pcmul.re[1].value ≈ pmul[1].re
+    @test pcmul.im[1].value ≈ pmul[1].im
+    @test pcmul.re[2].value ≈ pmul[2].re
+    @test pcmul.im[2].value ≈ pmul[2].im
+
+    pcmul = SIMDMath.mulsub(pc, pc2, pc)
+    pmul = @. p*p2 - p
+    @test pcmul.re[1].value ≈ pmul[1].re
+    @test pcmul.im[1].value ≈ pmul[1].im
+    @test pcmul.re[2].value ≈ pmul[2].re
+    @test pcmul.im[2].value ≈ pmul[2].im
+
+end
+
 end
