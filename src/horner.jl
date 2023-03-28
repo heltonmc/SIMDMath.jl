@@ -53,7 +53,7 @@ end
 # Usage:
 # x = 1.1
 # poly = (1.0, 0.5, 0.1, 0.05, 0.1)
-# evalpoly(x, poly) ≈ horner2(x, pack_horner2(poly)) ≈ horner4(x, pack_horner4(poly)) ≈ horner8(x, pack_horner8(poly))
+# evalpoly(x, poly) ≈ horner(x, pack_horner(poly, Val(2))) ≈ horner(x, pack_horner(poly, Val(4))) ≈ horner(x, pack_horner(poly, Val(8)))
 #
 # Note the approximative relation between each as floating point arithmetic is associative.
 # Here, we are adding up the polynomial in different degrees so there will be a few ULPs difference
@@ -64,47 +64,13 @@ end
 # horner4 - 4th order horner scheme that splits into a + ex^4 + ... & b + fx^5 ... & etc
 # horner8 - 8th order horner scheme that splits into a + ix^8 + .... & etc
 
-@inline horner(x::T, P::NTuple{N, T}) where {N, T <: FloatTypes} = evalpoly(x, P)
-@inline horner2(x, P::NTuple{N, T}) where {N, T <: FloatTypes} = horner2(x, pack_horner2(P))
-@inline horner4(x, P::NTuple{N, T}) where {N, T <: FloatTypes} = horner4(x, pack_horner4(P))
-@inline horner8(x, P::NTuple{N, T}) where {N, T <: FloatTypes} = horner8(x, pack_horner8(P))
-
-@inline function horner2(x, P::NTuple{N, Vec{2, T}}) where {N, T <: FloatTypes}
-    a = horner_simd(x * x, P)
-    return muladd(x, a.data[2].value, a.data[1].value)
-end
-
-@inline function horner4(x, P::NTuple{N, Vec{4, T}}) where {N, T <: FloatTypes}
-    xx = x * x
-    a = horner_simd(xx * xx, P)
-    b = muladd(x, Vec((a.data[4], a.data[2])), Vec((a.data[3], a.data[1])))
-    return muladd(xx, b.data[1].value, b.data[2].value) 
-end
-
-@inline function horner8(x, P::NTuple{N, Vec{8, T}}) where {N, T <: FloatTypes}
-    x2 = x * x
-    x4 = x2 * x2
-    a = horner_simd(x4 * x4, P)
-
-    # following computes
-    # a[1].value + a[2].value*x + a[3].value*x^2 + a[4].value*x^3 + a[5].value*x^4 + a[6].value*x^5 + a[7].value*x^6 + a[8].value*x^7
-
-    b = muladd(x, Vec((a.data[4], a.data[2], a.data[8], a.data[6])), Vec((a.data[3], a.data[1], a.data[7], a.data[5])))
-    c = muladd(x2, Vec((b.data[1], b.data[3])), Vec((b.data[2], b.data[4])))
-    return muladd(x4, c.data[2].value, c.data[1].value)
-end
-
 #
 # Packs coefficients for arbitrary order horner evaluation.
 # For example second order Horner packs a polynomial (0.1, 0.2, 0.3, 0.4) into (Vec{2, T}((0.1, 0.2)), Vec{2, T}((0.3, 0.4)))
 # A similar scheme is used for larger degrees with tupel elngth equal to the Val type.
-# Only suppored for second, fourth, and eight order horner evaluations, so Val should be restricted to 2, 4, 8
+# Only suppored for second, fourth, eighth, sixteenth, and 32nd order horner evaluations, so Val should be restricted to 2, 4, 8
 
-#
-# Usage:
-# x = 1.1
-# poly = (1.0, 0.5, 0.1, 0.05, 0.1)
-# evalpoly(x, poly) ≈ horner2(x, pack_horner(poly, Val(2))) ≈ horner4(x, pack_horner(poly, Val(4))) ≈ horner8(x, pack_horner(poly, Val(8)))
+
 #
 # Note: these functions will pack statically known polynomials for N <= 32 at compile time.
 # If length(poly) > 32 they must be packed and declared as constants otherwise packing will allocate at runtime.
@@ -121,4 +87,101 @@ end
     pad = !iszero(rem) ? (M - rem) : 0
     P = (p..., ntuple(i -> zero(T), Val(pad))...)
     return ntuple(i -> Vec(ntuple(k -> P[M*i - (M - k)], Val(M))), Val((N + pad) ÷ M))
+end
+
+@inline horner(x, P::NTuple{N, T}) where {N, T <: FloatTypes} = evalpoly(x, P)
+
+@inline function horner(x, P::NTuple{N, Vec{2, T}}) where {N, T <: FloatTypes}
+    x2 = x * x
+    p = horner_simd(x2, P)
+    a0 = Vec(shufflevector(p.data, Val(0)))
+    b0 = Vec(shufflevector(p.data, Val(1)))
+    return muladd(x, b0, a0).data[1].value
+end
+
+@inline function horner(x, P::NTuple{N, Vec{4, T}}) where {N, T <: FloatTypes}
+    x2 = x * x
+    x4 = x2 * x2
+    p = horner_simd(x4, P)
+    a0 = Vec(shufflevector(p.data, Val((0, 1))))
+    b0 = Vec(shufflevector(p.data, Val((2, 3))))
+    p1 = horner_simd(x2, (a0, b0))
+    a1 = Vec(shufflevector(p1.data, Val(0)))
+    b1 = Vec(shufflevector(p1.data, Val(1)))
+    return muladd(x, b1, a1).data[1].value
+end
+
+@inline function horner(x, P::NTuple{N, Vec{8, T}}) where {N, T <: FloatTypes}
+    x2 = x * x
+    x4 = x2 * x2
+    x8 = x4 * x4
+
+    p0 = horner_simd(x8, P)
+    a0 = Vec(shufflevector(p0.data, Val((0, 1, 2, 3))))
+    b0 = Vec(shufflevector(p0.data, Val((4, 5, 6, 7))))
+
+    p1 = horner_simd(x4, (a0, b0))
+    a1 = Vec(shufflevector(p1.data, Val((0, 1))))
+    b1 = Vec(shufflevector(p1.data, Val((2, 3))))
+
+    p2 = horner_simd(x2, (a1, b1))
+    a2 = Vec(shufflevector(p2.data, Val(0)))
+    b2 = Vec(shufflevector(p2.data, Val(1)))
+
+    return muladd(x, b2, a2).data[1].value
+end
+
+@inline function horner(x, P::NTuple{N, Vec{16, T}}) where {N, T <: FloatTypes}
+    x2 = x * x
+    x4 = x2 * x2
+    x8 = x4 * x4
+    x16 = x8 * x8
+
+    p0 = horner_simd(x16, P)
+    a0 = Vec(shufflevector(p0.data, Val((0, 1, 2, 3, 4, 5, 6, 7))))
+    b0 = Vec(shufflevector(p0.data, Val((8, 9, 10, 11, 12, 13, 14, 15))))
+
+    p1 = horner_simd(x8, (a0, b0))
+    a1 = Vec(shufflevector(p1.data, Val((0, 1, 2, 3))))
+    b1 = Vec(shufflevector(p1.data, Val((4, 5, 6, 7))))
+
+    p2 = horner_simd(x4, (a1, b1))
+    a2 = Vec(shufflevector(p2.data, Val((0, 1))))
+    b2 = Vec(shufflevector(p2.data, Val((2, 3))))
+
+    p3 = horner_simd(x2, (a2, b2))
+    a3 = Vec(shufflevector(p3.data, Val(0)))
+    b3 = Vec(shufflevector(p3.data, Val(1)))
+
+    return muladd(x, b3, a3).data[1].value
+end
+
+@inline function horner(x, P::NTuple{N, Vec{32, T}}) where {N, T <: FloatTypes}
+    x2 = x * x
+    x4 = x2 * x2
+    x8 = x4 * x4
+    x16 = x8 * x8
+    x32 = x16 * x16
+
+    p0 = horner_simd(x32, P)
+    a0 = Vec(shufflevector(p0.data, Val((0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15))))
+    b0 = Vec(shufflevector(p0.data, Val((16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31))))
+
+    p1 = horner_simd(x16, (a0, b0))
+    a1 = Vec(shufflevector(p1.data, Val((0, 1, 2, 3, 4, 5, 6, 7))))
+    b1 = Vec(shufflevector(p1.data, Val((8, 9, 10, 11, 12, 13, 14, 15))))
+
+    p2 = horner_simd(x8, (a1, b1))
+    a2 = Vec(shufflevector(p2.data, Val((0, 1, 2, 3))))
+    b2 = Vec(shufflevector(p2.data, Val((4, 5, 6, 7))))
+
+    p3 = horner_simd(x4, (a2, b2))
+    a3 = Vec(shufflevector(p3.data, Val((0, 1))))
+    b3 = Vec(shufflevector(p3.data, Val((2, 3))))
+
+    p4 = horner_simd(x2, (a3, b3))
+    a4 = Vec(shufflevector(p4.data, Val(0)))
+    b4 = Vec(shufflevector(p4.data, Val(1)))
+
+    return muladd(x, b4, a4).data[1].value
 end

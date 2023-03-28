@@ -13,8 +13,7 @@ using Base: llvmcall, VecElement
 using Base.Cartesian: @ntuple, @nexprs
 
 export horner_simd, pack_poly
-export horner, horner2, horner4, horner8
-export pack_horner
+export horner, pack_horner
 
 export clenshaw_simd
 

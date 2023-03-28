@@ -39,6 +39,30 @@ for f in (:fadd, :fsub, :fmul, :fdiv)
     end
 end
 
+# ShuffleVector
+
+_shuffle_vec(I) = join((string("i32 ", i == :undef ? "undef" : Int32(i::Integer)) for i in I), ", ")
+@inline @generated function shufflevector(x::LVec{N, T}, y::LVec{N, T}, ::Val{I}) where {N, T, I}
+    shfl = _shuffle_vec(I)
+    M = length(I)
+    s = """
+    %res = shufflevector <$N x $(LLVMType[T])> %0, <$N x $(LLVMType[T])> %1, <$M x i32> <$shfl>
+    ret <$M x $(LLVMType[T])> %res
+    """
+    return :(Base.llvmcall($s, LVec{$M, T}, Tuple{LVec{N, T}, LVec{N, T}}, x, y))
+end
+
+#@inline shufflevector(x::Vec{N, T}, ::Val(I)) where {N, T, I} = shufflevector(x.data, Val(I))
+@inline @generated function shufflevector(x::LVec{N, T}, ::Val{I}) where {N, T, I}
+    shfl = _shuffle_vec(I)
+    M = length(I)
+    s = """
+    %res = shufflevector <$(N) x $(LLVMType[T])> %0, <$N x $(LLVMType[T])> undef, <$M x i32> <$shfl>
+    ret <$M x $(LLVMType[T])> %res
+    """
+    return :(Base.llvmcall($s, LVec{$M, T}, Tuple{LVec{N, T}}, x))
+end
+
 # muladd llvm instructions
 
 @inline @generated function muladd(x::LVec{N, T}, y::LVec{N, T}, z::LVec{N, T}) where {N, T <: FloatTypes}
