@@ -63,16 +63,16 @@ end
 let
     for N in [2, 3, 4, 5, 6, 7, 10, 13, 17, 20, 52, 89], x in [0.1, 0.5, 1.5, 4.2, 45.0]
         poly = ntuple(n -> rand()*(-1)^n / n, N)
-        @test evalpoly(x, poly) ≈ horner2(x, pack_horner2(poly)) ≈ horner4(x, pack_horner4(poly)) ≈ horner8(x, pack_horner8(poly))
+        @test evalpoly(x, poly) ≈ horner2(x, pack_horner(poly, Val(2))) ≈ horner4(x, pack_horner(poly, Val(4))) ≈ horner8(x, pack_horner(poly, Val(8)))
     end
     for N in [2, 3, 4, 5, 6, 7, 10], x32 in [0.1f0, 0.8f0, 2.4f0, 8.0f0, 25.0f0]
         poly32 = ntuple(n -> Float32(rand()*(-1)^n / n), N)
-        @test evalpoly(x32, poly32) ≈ horner2(x32, pack_horner2(poly32)) ≈ horner4(x32, pack_horner4(poly32)) ≈ horner8(x32, pack_horner8(poly32))
+        @test evalpoly(x32, poly32) ≈ horner2(x32, pack_horner(poly32, Val(2))) ≈ horner4(x32, pack_horner(poly32, Val(4))) ≈ horner8(x32, pack_horner(poly32, Val(8)))
     end
     for N in [2, 3, 4, 5, 6], x in [0.1, 0.5, 2.2]
         poly16 = ntuple(n -> Float16(rand()*(-1)^n / n), N)
         x16 = Float16.(x)
-        @test evalpoly(x16, poly16) ≈ horner2(x16, pack_horner2(poly16)) ≈ horner4(x16, pack_horner4(poly16)) ≈ horner8(x16, pack_horner8(poly16))
+        @test evalpoly(x16, poly16) ≈ horner2(x16, pack_horner(poly16, Val(2))) ≈ horner4(x16, pack_horner(poly16, Val(4))) ≈ horner8(x16, pack_horner(poly16, Val(8)))
     end
 
 end

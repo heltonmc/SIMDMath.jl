@@ -95,40 +95,30 @@ end
 end
 
 #
-# Following packs coefficients for second, fourth, and eighth order horner evaluations.
-# Accepts a single polynomial that will pack into proper coefficients
+# Packs coefficients for arbitrary order horner evaluation.
+# For example second order Horner packs a polynomial (0.1, 0.2, 0.3, 0.4) into (Vec{2, T}((0.1, 0.2)), Vec{2, T}((0.3, 0.4)))
+# A similar scheme is used for larger degrees with tupel elngth equal to the Val type.
+# Only suppored for second, fourth, and eight order horner evaluations, so Val should be restricted to 2, 4, 8
+
 #
 # Usage:
 # x = 1.1
 # poly = (1.0, 0.5, 0.1, 0.05, 0.1)
-# evalpoly(x, poly) ≈ horner2(x, pack_horner2(poly)) ≈ horner4(x, pack_horner4(poly)) ≈ horner8(x, pack_horner8(poly))
+# evalpoly(x, poly) ≈ horner2(x, pack_horner(poly, Val(2))) ≈ horner4(x, pack_horner(poly, Val(4))) ≈ horner8(x, pack_horner(poly, Val(8)))
 #
 # Note: these functions will pack statically known polynomials for N <= 32 at compile time.
-# If length(poly) > 32 they must be packed and declared as constants otherwise packing will allocate at runtime
-# Example:
-# const P = pack_horner2(ntuple(i -> i*0.1, 35))
+# If length(poly) > 32 they must be packed and declared as constants otherwise packing will allocate at runtime.
+# Though this isn't consistent and should be investigated further.
+#
+# Therefore, it is always recommended (if you know the polynomial coefficients ahead of time) to pre-pack as constants
+# const P = pack_horner(ntuple(i -> i*0.1, 35), Val(2))
 # horner2(x, P)
 #
-# TODO: Use a generated function instead might make the packing more reliable for all polynomial degrees
 #
 
-@inline function pack_horner2(p::NTuple{N, T}) where {N, T <: FloatTypes}
-    rem = N % 2
-    pad = !iszero(rem) ? (2 - rem) : 0
+@inline function pack_horner(p::NTuple{N, T}, ::Val{M}) where {N, T <: FloatTypes, M}
+    rem = N % M
+    pad = !iszero(rem) ? (M - rem) : 0
     P = (p..., ntuple(i -> zero(T), Val(pad))...)
-    return ntuple(i -> Vec((P[2i - 1], P[2i])), Val((N + pad) ÷ 2))
-end
-
-@inline function pack_horner4(p::NTuple{N, T}) where {N, T <: FloatTypes}
-    rem = N % 4
-    pad = !iszero(rem) ? (4 - rem) : 0
-    P = (p..., ntuple(i -> zero(T), Val(pad))...)
-    return ntuple(i -> Vec((P[4i - 3], P[4i - 2], P[4i - 1], P[4i])), Val((N + pad) ÷ 4))
-end
-
-@inline function pack_horner8(p::NTuple{N, T}) where {N, T <: FloatTypes}
-    rem = N % 8
-    pad = !iszero(rem) ? (8 - rem) : 0
-    P = (p..., ntuple(i -> zero(T), Val(pad))...)
-    return ntuple(i -> Vec((P[8i - 7], P[8i - 6], P[8i - 5], P[8i - 4], P[8i - 3], P[8i - 2], P[8i - 1], P[8i])), Val((N + pad) ÷ 8))
+    return ntuple(i -> Vec(ntuple(k -> P[M*i - (M - k)], Val(M))), Val((N + pad) ÷ M))
 end
