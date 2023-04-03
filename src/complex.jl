@@ -11,8 +11,8 @@
 
 # complex multiply
 @inline function fmul(x::ComplexVec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}) where {N, FloatTypes}
-    r = mulsub(x.re, y.re, fmul(x.im, y.im))
-    i = muladd(x.re, y.im, fmul(x.im, y.re))
+    r = fmsub(x.re, y.re, fmul(x.im, y.im))
+    i = fmadd(x.re, y.im, fmul(x.im, y.re))
     return ComplexVec(r, i)
 end
 
@@ -43,7 +43,7 @@ for f in (:fmul, :fadd, :fsub)
 end
 
 # complex multiply-add
-@inline muladd(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes} = fadd(fmul(x, y), z)
+@inline fmadd(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes} = fadd(fmul(x, y), z)
 
 # complex multiply-subtract
-@inline mulsub(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes} = fsub(fmul(x, y), z)
+@inline fmsub(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes} = fsub(fmul(x, y), z)

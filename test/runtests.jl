@@ -177,22 +177,22 @@ let
 
     # multiply add
 
-    pcmul = SIMDMath.muladd(pc, pc2, pc)
+    pcmul = SIMDMath.fmadd(pc, pc2, pc)
     pmul = muladd.(p, p2, p)
     @test pcmul.re[1].value ≈ pmul[1].re
     @test pcmul.im[1].value ≈ pmul[1].im
     @test pcmul.re[2].value ≈ pmul[2].re
     @test pcmul.im[2].value ≈ pmul[2].im
 
-    pcmul = SIMDMath.muladd(pc, pr1, pc)
-    @test pcmul == SIMDMath.muladd(pr1, pc, pc)
+    pcmul = SIMDMath.fmadd(pc, pr1, pc)
+    @test pcmul == SIMDMath.fmadd(pr1, pc, pc)
     pmul = muladd.(p, pr, p)
     @test pcmul.re[1].value ≈ pmul[1].re
     @test pcmul.im[1].value ≈ pmul[1].im
     @test pcmul.re[2].value ≈ pmul[2].re
     @test pcmul.im[2].value ≈ pmul[2].im
 
-    pcmul = SIMDMath.muladd(pc, pr1, pr1)
+    pcmul = SIMDMath.fmadd(pc, pr1, pr1)
     pmul = muladd.(p, pr, pr)
     @test pcmul.re[1].value ≈ pmul[1].re
     @test pcmul.im[1].value ≈ pmul[1].im
@@ -201,22 +201,22 @@ let
 
     # multiply subtract
 
-    pcmul = SIMDMath.mulsub(pc, pc2, pc)
+    pcmul = SIMDMath.fmsub(pc, pc2, pc)
     pmul = @. p*p2 - p
     @test pcmul.re[1].value ≈ pmul[1].re
     @test pcmul.im[1].value ≈ pmul[1].im
     @test pcmul.re[2].value ≈ pmul[2].re
     @test pcmul.im[2].value ≈ pmul[2].im
 
-    pcmul = SIMDMath.mulsub(pc, pr1, pc)
-    @test pcmul == SIMDMath.mulsub(pr1, pc, pc)
+    pcmul = SIMDMath.fmsub(pc, pr1, pc)
+    @test pcmul == SIMDMath.fmsub(pr1, pc, pc)
     pmul = @. p*pr - p
     @test pcmul.re[1].value ≈ pmul[1].re
     @test pcmul.im[1].value ≈ pmul[1].im
     @test pcmul.re[2].value ≈ pmul[2].re
     @test pcmul.im[2].value ≈ pmul[2].im
 
-    pcmul = SIMDMath.mulsub(pc, pr1, pr1)
+    pcmul = SIMDMath.fmsub(pc, pr1, pr1)
     pmul = @. p*pr - pr
     @test pcmul.re[1].value ≈ pmul[1].re
     @test pcmul.im[1].value ≈ pmul[1].im
