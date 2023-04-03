@@ -178,11 +178,3 @@ end
         llvmcall($s, LVec{N, T}, Tuple{LVec{N, T}}, x)
         )
 end
-
-
-function fmaddsub2(a::LVec{2, Float64}, b::LVec{2, Float64}, c::LVec{2, Float64})
-    ccall("llvm.x86.fma.vfmaddsub.pd", llvmcall, LVec{2, Float64}, (LVec{2, Float64}, LVec{2, Float64}, LVec{2, Float64}), a, b, c)
-end
-function fmaddsub2(a::LVec{4, Float64}, b::LVec{4, Float64}, c::LVec{4, Float64})
-    ccall("llvm.x86.fma.vfmaddsub.pd", llvmcall, LVec{4, Float64}, (LVec{4, Float64}, LVec{4, Float64}, LVec{4, Float64}), a, b, c)
-end
