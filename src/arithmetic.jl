@@ -50,7 +50,9 @@ _shuffle_vec(I) = join((string("i32 ", i == :undef ? "undef" : Int32(i::Integer)
     %res = shufflevector <$N x $(LLVMType[T])> %0, <$N x $(LLVMType[T])> %1, <$M x i32> <$shfl>
     ret <$M x $(LLVMType[T])> %res
     """
-    return :(Base.llvmcall($s, LVec{$M, T}, Tuple{LVec{N, T}, LVec{N, T}}, x, y))
+    return :(
+        llvmcall($s, LVec{$M, T}, Tuple{LVec{N, T}, LVec{N, T}}, x, y)
+        )
 end
 
 @inline @generated function shufflevector(x::LVec{N, T}, ::Val{I}) where {N, T, I}
@@ -60,7 +62,9 @@ end
     %res = shufflevector <$(N) x $(LLVMType[T])> %0, <$N x $(LLVMType[T])> undef, <$M x i32> <$shfl>
     ret <$M x $(LLVMType[T])> %res
     """
-    return :(Base.llvmcall($s, LVec{$M, T}, Tuple{LVec{N, T}}, x))
+    return :(
+        llvmcall($s, LVec{$M, T}, Tuple{LVec{N, T}}, x)
+        )
 end
 
 # muladd llvm instructions
