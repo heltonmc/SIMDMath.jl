@@ -1,4 +1,4 @@
-const VE         = Base.VecElement
+const VE = Base.VecElement
 const LVec{N, T} = NTuple{N, VE{T}}
 
 const FloatTypes = Union{Float16, Float32, Float64}
@@ -22,6 +22,8 @@ struct ComplexVec{N, T<:FloatTypes}
     re::LVec{N, T}
     im::LVec{N, T}
 end
+
+const ComplexorRealVec{N, T} = Union{Vec{N, T}, ComplexVec{N, T}}
 
 ComplexVec(x::NTuple{N, T}, y::NTuple{N, T}) where {N, T <: FloatTypes} = ComplexVec(LVec{N, T}(x), LVec{N, T}(y))
 
