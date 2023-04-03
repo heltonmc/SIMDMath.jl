@@ -91,7 +91,7 @@ end
 # a*b + c for i = 1, 3, ...
 # a*b - c for i = 0, 2, ...
 @inline @generated function fmaddsub(x::LVec{N, T}, y::LVec{N, T}, z::LVec{N, T}) where {N, T <: FloatTypes}
-    @assert iseven(N)
+    @assert iseven(N) "Vector length must be even"
     shfl = join((string("i32 ", Int32(i-1), ", i32 ", Int32(N+i)) for i in 1:2:N), ", ")
     s = """
         %4 = fmul contract <$N x $(LLVMType[T])> %0, %1
@@ -108,7 +108,7 @@ end
 # a*b - c for i = 1, 3, ...
 # a*b + c for i = 0, 2, ...
 @inline @generated function fmsubadd(x::LVec{N, T}, y::LVec{N, T}, z::LVec{N, T}) where {N, T <: FloatTypes}
-    @assert iseven(N)
+    @assert iseven(N) "Vector length must be even"
     shfl = join((string("i32 ", Int32(i-1), ", i32 ", Int32(N+i)) for i in 1:2:N), ", ")
     s = """
         %4 = fmul contract <$N x $(LLVMType[T])> %0, %1
