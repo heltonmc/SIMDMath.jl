@@ -18,8 +18,9 @@ export horner, pack_horner
 export clenshaw_simd
 
 include("types.jl")
-include("arithmetic.jl")
-include("horner.jl")
+include("intrinsics.jl")
+include("interface.jl")
 include("complex.jl")
+include("horner.jl")
 
 end

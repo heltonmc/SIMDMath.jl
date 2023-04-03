@@ -27,9 +27,27 @@
 @inline function horner_simd(x::Vec{M, T}, p::NTuple{N, Vec{M, T}}) where {N, M, T <: FloatTypes}
     a = p[end]
     for i in N-1:-1:1
-        a = muladd(x, a, p[i])
+        a = fmadd(x, a, p[i])
     end
     return a
+end
+
+# Complex SIMD evalpoly using the Goertzel algorithm
+# see https://github.com/JuliaLang/julia/blob/master/base/math.jl
+@inline function horner_simd(z::Complex{T}, p::NTuple{N, Vec{M, T}}) where {N, M, T <: FloatTypes}
+    a = p[end]
+    b = p[end-1]
+    x = real(z)
+    y = imag(z)
+    r = constantvector(2x, Vec{M, T})
+    s = constantvector(muladd(x, x, y*y), Vec{M, T})
+    @inbounds for i in N-2:-1:1
+        ai = a
+        a = fmadd(r, ai, b)
+        b = fnmadd(s, ai, p[i])
+    end
+    ai = a
+    return fmadd(ai, constantvector(z, ComplexVec{M, T}), b)
 end
 
 # Clenshaw recurrence scheme to evaluate Chebyshev polynomials
@@ -39,9 +57,9 @@ end
     c0 = c[end-1]
     c1 = c[end]
     for i in length(c)-2:-1:1
-        c0, c1 = fsub(c[i], c1), muladd(x2, c1, c0)
+        c0, c1 = fsub(c[i], c1), fmadd(x2, c1, c0)
     end
-    return muladd(x, c1, c0)
+    return fmadd(x, c1, c0)
 end
 
 #
@@ -96,7 +114,7 @@ end
     p = horner_simd(x2, P)
     a0 = Vec(shufflevector(p.data, Val(0)))
     b0 = Vec(shufflevector(p.data, Val(1)))
-    return muladd(x, b0, a0).data[1].value
+    return fmadd(x, b0, a0).data[1].value
 end
 
 @inline function horner(x, P::NTuple{N, Vec{4, T}}) where {N, T <: FloatTypes}
@@ -108,7 +126,7 @@ end
     p1 = horner_simd(x2, (a0, b0))
     a1 = Vec(shufflevector(p1.data, Val(0)))
     b1 = Vec(shufflevector(p1.data, Val(1)))
-    return muladd(x, b1, a1).data[1].value
+    return fmadd(x, b1, a1).data[1].value
 end
 
 @inline function horner(x, P::NTuple{N, Vec{8, T}}) where {N, T <: FloatTypes}
@@ -128,7 +146,7 @@ end
     a2 = Vec(shufflevector(p2.data, Val(0)))
     b2 = Vec(shufflevector(p2.data, Val(1)))
 
-    return muladd(x, b2, a2).data[1].value
+    return fmadd(x, b2, a2).data[1].value
 end
 
 @inline function horner(x, P::NTuple{N, Vec{16, T}}) where {N, T <: FloatTypes}
@@ -153,7 +171,7 @@ end
     a3 = Vec(shufflevector(p3.data, Val(0)))
     b3 = Vec(shufflevector(p3.data, Val(1)))
 
-    return muladd(x, b3, a3).data[1].value
+    return fmadd(x, b3, a3).data[1].value
 end
 
 @inline function horner(x, P::NTuple{N, Vec{32, T}}) where {N, T <: FloatTypes}
@@ -183,5 +201,5 @@ end
     a4 = Vec(shufflevector(p4.data, Val(0)))
     b4 = Vec(shufflevector(p4.data, Val(1)))
 
-    return muladd(x, b4, a4).data[1].value
+    return fmadd(x, b4, a4).data[1].value
 end
