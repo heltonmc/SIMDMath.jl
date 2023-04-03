@@ -32,6 +32,24 @@
     return a
 end
 
+# Complex SIMD evalpoly using the Goertzel algorithm
+# see https://github.com/JuliaLang/julia/blob/master/base/math.jl
+@inline function horner_simd(z::Complex{T}, p::NTuple{N, Vec{M, T}}) where {N, M, T <: FloatTypes}
+    a = p[end]
+    b = p[end-1]
+    x = real(z)
+    y = imag(z)
+    r = constantvector(2x, Vec{M, T})
+    s = constantvector(muladd(x, x, y*y), Vec{M, T})
+    @inbounds for i in N-2:-1:1
+        ai = a
+        a = muladd(r, ai, b)
+        b = fnmadd(s, ai, p[i])
+    end
+    ai = a
+    return muladd(ai, constantvector(z, ComplexVec{M, T}), b)
+end
+
 # Clenshaw recurrence scheme to evaluate Chebyshev polynomials
 # Assumes arguments x is prescaled
 @inline function clenshaw_simd(x::T, c::NTuple{N, Vec{M, T}}) where {N, M, T <: FloatTypes}

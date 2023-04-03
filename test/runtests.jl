@@ -223,6 +223,19 @@ let
     @test pcmul.re[2].value ≈ pmul[2].re
     @test pcmul.im[2].value ≈ pmul[2].im
 
+    P1 = (1.1, 1.2, 1.4, 1.5, 1.3, 1.4, 1.5, 1.6, 1.7, 1.2, 1.2, 2.1, 3.1, 1.4, 1.5)
+    P2 = (1.1, 1.2, 1.4, 1.53, 1.32, 1.41, 1.52, 1.64, 1.4, 1.0, 1.6, 2.5, 3.1, 1.9, 1.2)
+    pp3 = pack_poly((P1, P2))
+    z = 1.2 + 1.1im
+    s = horner_simd(z, pp3)
+    e = evalpoly(z, P1)
+
+    @test s.re[1].value == e.re
+    @test s.im[1].value == e.im
+
+    e = evalpoly(z, P2)
+    @test s.re[2].value == e.re
+    @test s.im[2].value == e.im
 end
 
 end
