@@ -236,6 +236,23 @@ let
     e = evalpoly(z, P2)
     @test s.re[2].value == e.re
     @test s.im[2].value == e.im
+
+    a = SIMDMath.LVec{4, Float64}((1.1, 1.2, 1.3, 1.4))
+    b = SIMDMath.LVec{4, Float64}((1.1, 1.3, 1.6, 1.5))
+    c = SIMDMath.LVec{4, Float64}((1.3, 1.6, 1.9, 3.1))
+
+    o = SIMDMath.fmaddsub(a, b, c)
+    @test o[1].value ≈ 1.1*1.1 - 1.3
+    @test o[2].value ≈ 1.2*1.3 + 1.6
+    @test o[3].value ≈ 1.3*1.6 - 1.9
+    @test o[4].value ≈ 1.4*1.5 + 3.1
+
+    o = SIMDMath.fmsubadd(a, b, c)
+    @test o[1].value ≈ 1.1*1.1 + 1.3
+    @test o[2].value ≈ 1.2*1.3 - 1.6
+    @test o[3].value ≈ 1.3*1.6 + 1.9
+    @test o[4].value ≈ 1.4*1.5 - 3.1
+
 end
 
 end
