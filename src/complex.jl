@@ -43,7 +43,19 @@ for f in (:fmul, :fadd, :fsub)
 end
 
 # complex multiply-add
+# a*b + c
 @inline fmadd(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes} = fadd(fmul(x, y), z)
 
 # complex multiply-subtract
+# a*b - c
 @inline fmsub(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes} = fsub(fmul(x, y), z)
+
+# complex negated multiply-add
+# -a*b + c
+@inline fnmadd(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes} = fsub(z, fmul(x, y))
+
+# -a*b - c
+@inline function fnmsub(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes}
+    a = fmadd(x, y, z)
+    return ComplexVec{N, T}(fneg(a.re), fneg(a.im))
+end

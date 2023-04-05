@@ -88,6 +88,72 @@ end
         )
 end
 
+# a*b + c for i = 1, 3, ...
+# a*b - c for i = 0, 2, ...
+@inline @generated function fmaddsub(x::LVec{N, T}, y::LVec{N, T}, z::LVec{N, T}) where {N, T <: FloatTypes}
+    @assert iseven(N) "Vector length must be even"
+    shfl = join((string("i32 ", Int32(i-1), ", i32 ", Int32(N+i)) for i in 1:2:N), ", ")
+    s = """
+        %4 = fmul contract <$N x $(LLVMType[T])> %0, %1
+        %5 = fsub contract <$N x $(LLVMType[T])> %4, %2
+        %6 = fadd contract <$N x $(LLVMType[T])> %4, %2
+        %7 = shufflevector <$N x $(LLVMType[T])> %5, <$N x $(LLVMType[T])> %6, <$N x i32> <$shfl>
+        ret <$N x $(LLVMType[T])> %7
+        """
+    return :(
+        llvmcall($s, LVec{N, T}, Tuple{LVec{N, T}, LVec{N, T}, LVec{N, T}}, x, y, z)
+        )
+end
+
+# a*b - c for i = 1, 3, ...
+# a*b + c for i = 0, 2, ...
+@inline @generated function fmsubadd(x::LVec{N, T}, y::LVec{N, T}, z::LVec{N, T}) where {N, T <: FloatTypes}
+    @assert iseven(N) "Vector length must be even"
+    shfl = join((string("i32 ", Int32(i-1), ", i32 ", Int32(N+i)) for i in 1:2:N), ", ")
+    s = """
+        %4 = fmul contract <$N x $(LLVMType[T])> %0, %1
+        %5 = fadd contract <$N x $(LLVMType[T])> %4, %2
+        %6 = fsub contract <$N x $(LLVMType[T])> %4, %2
+        %7 = shufflevector <$N x $(LLVMType[T])> %5, <$N x $(LLVMType[T])> %6, <$N x i32> <$shfl>
+        ret <$N x $(LLVMType[T])> %7
+        """
+    return :(
+        llvmcall($s, LVec{N, T}, Tuple{LVec{N, T}, LVec{N, T}, LVec{N, T}}, x, y, z)
+        )
+end
+
+# a + b for i = 1, 3, ...
+# a - b for i = 0, 2, ...
+@inline @generated function faddsub(x::LVec{N, T}, y::LVec{N, T}) where {N, T <: FloatTypes}
+    @assert iseven(N) "Vector length must be even"
+    shfl = join((string("i32 ", Int32(i-1), ", i32 ", Int32(N+i)) for i in 1:2:N), ", ")
+    s = """
+        %3 = fsub contract <$N x $(LLVMType[T])> %0, %1
+        %4 = fadd contract <$N x $(LLVMType[T])> %0, %1
+        %5 = shufflevector <$N x $(LLVMType[T])> %3, <$N x $(LLVMType[T])> %4, <$N x i32> <$shfl>
+        ret <$N x $(LLVMType[T])> %5
+        """
+    return :(
+        llvmcall($s, LVec{N, T}, Tuple{LVec{N, T}, LVec{N, T}}, x, y)
+        )
+end
+
+# a - b for i = 1, 3, ...
+# a + b for i = 0, 2, ...
+@inline @generated function fsubadd(x::LVec{N, T}, y::LVec{N, T}) where {N, T <: FloatTypes}
+    @assert iseven(N) "Vector length must be even"
+    shfl = join((string("i32 ", Int32(i-1), ", i32 ", Int32(N+i)) for i in 1:2:N), ", ")
+    s = """
+        %3 = fsub contract <$N x $(LLVMType[T])> %0, %1
+        %4 = fadd contract <$N x $(LLVMType[T])> %0, %1
+        %5 = shufflevector <$N x $(LLVMType[T])> %4, <$N x $(LLVMType[T])> %3, <$N x i32> <$shfl>
+        ret <$N x $(LLVMType[T])> %5
+        """
+    return :(
+        llvmcall($s, LVec{N, T}, Tuple{LVec{N, T}, LVec{N, T}}, x, y)
+        )
+end
+
 # Add/subtract/multiply/divide instinsics
 for f in (:fadd, :fsub, :fmul, :fdiv)
     @eval @inline @generated function $f(x::LVec{N, T}, y::LVec{N, T}) where {N, T <: FloatTypes}
