@@ -111,6 +111,7 @@ let
 
 end
 let
+    using SIMDMath: Vec, ComplexVec
     # test extractelement and getindex
     a = Vec{4, Float64}((1.2, 1.3, 1.4, 1.5))
     b = ComplexVec{4, Float64}((1.2, 1.3, 1.4, 1.5), (1.3, 1.4, 1.5, 1.6))
