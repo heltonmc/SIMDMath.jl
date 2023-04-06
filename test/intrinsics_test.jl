@@ -110,3 +110,14 @@ let
     @test (rvec[1].value, rvec[2].value) == r
 
 end
+let
+    # test extractelement and getindex
+    a = Vec{4, Float64}((1.2, 1.3, 1.4, 1.5))
+    b = ComplexVec{4, Float64}((1.2, 1.3, 1.4, 1.5), (1.3, 1.4, 1.5, 1.6))
+
+    @test a[1] == 1.2
+    @test (@inbounds a[4] == 1.5)
+
+    @test b[2] == 1.3 + 1.4im
+    @test (@inbounds b[3] == 1.4 + 1.5im)
+end

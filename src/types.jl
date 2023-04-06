@@ -1,6 +1,10 @@
 const VE = Base.VecElement
 const LVec{N, T} = NTuple{N, VE{T}}
 
+const IntTypes      = Union{Int8, Int16, Int32, Int64}
+const BIntTypes     = Union{IntTypes, Bool}
+const UIntTypes     = Union{UInt8, UInt16, UInt32, UInt64}
+const IntegerTypes  = Union{IntTypes, UIntTypes}
 const FloatTypes = Union{Float16, Float32, Float64}
 const ScalarTypes = Union{VE{FloatTypes}, FloatTypes}
 
@@ -11,6 +15,18 @@ end
 @inline Vec(v::NTuple{N, T}) where {N, T <: FloatTypes} = Vec(VE.(v))
 
 const LLVMType = Dict{DataType, String}(
+    Int8         => "i8",
+    Int16        => "i16",
+    Int32        => "i32",
+    Int64        => "i64",
+    Int128       => "i128",
+
+    UInt8        => "i8",
+    UInt16       => "i16",
+    UInt32       => "i32",
+    UInt64       => "i64",
+    UInt128      => "i128",
+
     Float16  => "half",
     Float32  => "float",
     Float64  => "double",
