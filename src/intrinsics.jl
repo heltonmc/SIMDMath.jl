@@ -37,6 +37,18 @@ _shuffle_vec(I) = join((string("i32 ", i == :undef ? "undef" : Int32(i::Integer)
         )
 end
 
+# Extract element
+
+@inline @generated function extractelement(x::LVec{N, T}, i::I) where {N, T, I <: Integer}
+    s = """
+    %3 = extractelement <$N x $(LLVMType[T])> %0, $(LLVMType[I]) %1
+    ret $(LLVMType[T]) %3
+    """
+    return :(
+        llvmcall($s, T, Tuple{LVec{N, T}, $i}, x, i)
+    )
+end
+
 # Fused multiply/add/subtract/negate intrinsics
 
 # a*b + c

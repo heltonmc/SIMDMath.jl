@@ -25,3 +25,15 @@ for f in (:fadd, :fsub, :fmul, :fdiv)
         @inline $f(x::ScalarTypes, y::Vec{N, T}) where {N, T <: FloatTypes} = $f(constantvector(x, Vec{N, T}), y)
     end
 end
+
+@inline Base.checkbounds(v::ComplexorRealVec{N, T}, i::IntegerTypes) where {N, T} = (i < 1 || i > N) && Base.throw_boundserror(v, i)
+
+Base.@propagate_inbounds function Base.getindex(v::Vec{N, T}, i::IntegerTypes) where {N, T}
+    @boundscheck checkbounds(v, i)
+    return extractelement(v.data, i-1)
+end
+
+Base.@propagate_inbounds function Base.getindex(v::ComplexVec{N, T}, i::IntegerTypes) where {N, T}
+    @boundscheck checkbounds(v, i)
+    return complex(extractelement(v.re, i-1), extractelement(v.im, i-1))
+end
