@@ -21,26 +21,31 @@ end
     i = fmul(x.im, y.data)
     return ComplexVec(r, i)
 end
+@inline fmul(x::Vec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}) where {N, FloatTypes} = fmul(y, x)
 
 # Complex add / subtract
 for f in (:fadd, :fsub)
     @eval begin
         @inline function $f(x::ComplexVec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}) where {N, FloatTypes}
-            re = $f(x.re, y.re)
-            im = $f(x.im, y.im)
-            return ComplexVec(re, im)
+            r = $f(x.re, y.re)
+            i = $f(x.im, y.im)
+            return ComplexVec(r, i)
         end
         @inline function $f(x::ComplexVec{N, FloatTypes}, y::Vec{N, FloatTypes}) where {N, FloatTypes}
-            re = $f(x.re, y.data)
-            return ComplexVec(re, x.im)
+            r = $f(x.re, y.data)
+            return ComplexVec(r, x.im)
         end
     end
 end
 
-for f in (:fmul, :fadd, :fsub)
-    # Argument symmetry
-    @eval @inline $f(x::Vec{N, T}, y::ComplexVec{N, T}) where {N, T <: FloatTypes} = $f(y, x)
+@inline fadd(x::Vec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}) where {N, FloatTypes} = fadd(y, x)
 
+@inline function fsub(x::Vec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}) where {N, FloatTypes}
+    r = fsub(x.data, y.re)
+    return ComplexVec(r, fneg(y.im))
+end
+
+for f in (:fmul, :fadd, :fsub)
     # promote complex numbers to constant complex vectors
     @eval @inline $f(x::Complex{T}, y::ComplexVec{N, T}) where {N, T <: FloatTypes} = $f(promote(x, y)...)
     @eval @inline $f(x::ComplexVec{N, T}, y::Complex{T}) where {N, T <: FloatTypes} = $f(promote(x, y)...)
@@ -64,6 +69,5 @@ end
 # -a*b + c
 @inline fnmadd(x, y, z) = fsub(z, fmul(x, y))
 
-### LOOKS LIKE FSUB CAN'T SWITCH ARGUMENTS LIKE THAT like a - b does not equal b - a
 # -a*b - c
 @inline fnmsub(x, y, z) = fneg(fmadd(x, y, z))
