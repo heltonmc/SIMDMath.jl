@@ -32,6 +32,13 @@ const LLVMType = Dict{DataType, String}(
     Float64  => "double",
 )
 
+const ScalarOrVec{N, T} = Union{ScalarTypes, Vec{N, T}}
+
+Base.convert(::Type{Vec{N, T}}, x::Vec{N, T}) where {N, T <: FloatTypes} = x
+Base.convert(::Type{Vec{N, T}}, x::T) where {N, T <: ScalarTypes} = constantvector(x, Vec{N, T})
+
+Base.promote_rule(::Type{Vec{N, T}}, ::Type{T}) where {N, T <: FloatTypes} = Vec{N, T}
+
 # Complex Types
 
 struct ComplexVec{N, T<:FloatTypes}
@@ -39,8 +46,15 @@ struct ComplexVec{N, T<:FloatTypes}
     im::LVec{N, T}
 end
 
-const ComplexorRealVec{N, T} = Union{Vec{N, T}, ComplexVec{N, T}}
+const ComplexOrRealVec{N, T} = Union{Vec{N, T}, ComplexVec{N, T}}
 
 ComplexVec(x::NTuple{N, T}, y::NTuple{N, T}) where {N, T <: FloatTypes} = ComplexVec(LVec{N, T}(x), LVec{N, T}(y))
-
 ComplexVec(z::NTuple{N, Complex{T}}) where {N, T <: FloatTypes} = ComplexVec(real.(z), imag.(z))
+
+Base.convert(::Type{ComplexVec{N, T}}, z::ComplexVec{N, T}) where {N, T <: FloatTypes} = z
+Base.convert(::Type{ComplexVec{N, T}}, z::Complex{T}) where {N, T <: FloatTypes} = constantvector(z, ComplexVec{N, T})
+Base.convert(::Type{Vec{N, T}}, z::Complex{T}) where {N, T <: FloatTypes} = constantvector(z, ComplexVec{N, T})
+Base.convert(::Type{ComplexVec{N, T}}, x::T) where {N, T <: ScalarTypes} = ComplexVec{N, T}(constantvector(x, LVec{N, T}), constantvector(zero(T), LVec{N, T}))
+
+Base.promote_rule(::Type{ComplexVec{N, T}}, ::Type{Complex{T}}) where {N, T <: FloatTypes} = ComplexVec{N, T}
+Base.promote_rule(::Type{Vec{N, T}}, ::Type{Complex{T}}) where {N, T <: FloatTypes} = ComplexVec{N, T}

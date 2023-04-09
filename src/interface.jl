@@ -9,24 +9,18 @@
 for f in (:fmadd, :fmsub, :fnmadd, :fnmsub)
     @eval begin
         @inline $f(x::Vec{N, T}, y::Vec{N, T}, z::Vec{N, T}) where {N, T <: FloatTypes} = Vec($f(x.data, y.data, z.data))
-        @inline $f(x::ScalarTypes, y::Vec{N, T}, z::Vec{N, T}) where {N, T <: FloatTypes} = $f(constantvector(x, Vec{N, T}), y, z)
-        @inline $f(x::Vec{N, T}, y::ScalarTypes, z::Vec{N, T}) where {N, T <: FloatTypes} = $f(x, constantvector(y, Vec{N, T}), z)
-        @inline $f(x::ScalarTypes, y::ScalarTypes, z::Vec{N, T}) where {N, T <: FloatTypes} = $f(constantvector(x, Vec{N, T}), constantvector(y, Vec{N, T}), z)
-        @inline $f(x::Vec{N, T}, y::Vec{N, T}, z::ScalarTypes) where {N, T <: FloatTypes} = $f(x, y, constantvector(z, Vec{N, T}))
-        @inline $f(x::ScalarTypes, y::Vec{N, T}, z::ScalarTypes) where {N, T <: FloatTypes} = $f(constantvector(x, Vec{N, T}), y, constantvector(z, Vec{N, T}))
-        @inline $f(x::Vec{N, T}, y::ScalarTypes, z::ScalarTypes) where {N, T <: FloatTypes} = $f(x, constantvector(y, Vec{N, T}), constantvector(z, Vec{N, T}))
+        @inline $f(x::ScalarOrVec{N, T}, y::ScalarOrVec{N, T}, z::ScalarOrVec{N, T}) where {N, T <: FloatTypes} = $f(promote(x, y, z)...)
     end
 end
 
 for f in (:fadd, :fsub, :fmul, :fdiv)
     @eval begin
         @inline $f(x::Vec{N, T}, y::Vec{N, T}) where {N, T <: FloatTypes} = Vec($f(x.data, y.data))
-        @inline $f(x::Vec{N, T}, y::ScalarTypes) where {N, T <: FloatTypes} = $f(x, constantvector(y, Vec{N, T}))
-        @inline $f(x::ScalarTypes, y::Vec{N, T}) where {N, T <: FloatTypes} = $f(constantvector(x, Vec{N, T}), y)
+        @inline $f(x::ScalarOrVec{N, T}, y::ScalarOrVec{N, T}) where {N, T <: FloatTypes} = $f(promote(x, y)...)
     end
 end
 
-@inline Base.checkbounds(v::ComplexorRealVec{N, T}, i::IntegerTypes) where {N, T} = (i < 1 || i > N) && Base.throw_boundserror(v, i)
+@inline Base.checkbounds(v::ComplexOrRealVec{N, T}, i::IntegerTypes) where {N, T} = (i < 1 || i > N) && Base.throw_boundserror(v, i)
 
 Base.@propagate_inbounds function Base.getindex(v::Vec{N, T}, i::IntegerTypes) where {N, T}
     @boundscheck checkbounds(v, i)

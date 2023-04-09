@@ -37,25 +37,33 @@ for f in (:fadd, :fsub)
     end
 end
 
-# Argument symmetry
 for f in (:fmul, :fadd, :fsub)
+    # Argument symmetry
     @eval @inline $f(x::Vec{N, T}, y::ComplexVec{N, T}) where {N, T <: FloatTypes} = $f(y, x)
+
+    # promote complex numbers to constant complex vectors
+    @eval @inline $f(x::Complex{T}, y::ComplexVec{N, T}) where {N, T <: FloatTypes} = $f(promote(x, y)...)
+    @eval @inline $f(x::ComplexVec{N, T}, y::Complex{T}) where {N, T <: FloatTypes} = $f(promote(x, y)...)
+
+    # promote real numbers to constant real vectors
+    @eval @inline $f(x::T, y::ComplexVec{N, T}) where {N, T <: FloatTypes} = $f(convert(Vec{N, T}, x), y)
+    @eval @inline $f(x::ComplexVec{N, T}, y::T) where {N, T <: FloatTypes} = $f(x, convert(Vec{N, T}, y))
 end
+
+@inline fneg(x::ComplexVec{N, T}) where {N, T <: FloatTypes} = ComplexVec{N, T}(fneg(x.re), fneg(x.im))
 
 # complex multiply-add
 # a*b + c
-@inline fmadd(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes} = fadd(fmul(x, y), z)
+@inline fmadd(x, y, z) = fadd(fmul(x, y), z)
 
 # complex multiply-subtract
 # a*b - c
-@inline fmsub(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes} = fsub(fmul(x, y), z)
+@inline fmsub(x, y, z) = fsub(fmul(x, y), z)
 
 # complex negated multiply-add
 # -a*b + c
-@inline fnmadd(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes} = fsub(z, fmul(x, y))
+@inline fnmadd(x, y, z) = fsub(z, fmul(x, y))
 
+### LOOKS LIKE FSUB CAN'T SWITCH ARGUMENTS LIKE THAT like a - b does not equal b - a
 # -a*b - c
-@inline function fnmsub(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes}
-    a = fmadd(x, y, z)
-    return ComplexVec{N, T}(fneg(a.re), fneg(a.im))
-end
+@inline fnmsub(x, y, z) = fneg(fmadd(x, y, z))
