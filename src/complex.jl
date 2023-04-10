@@ -78,3 +78,4 @@ end
 @inline fmul(x::Union{T, Complex{T}}, y::Union{T, Complex{T}}) where T = x * y
 @inline fadd(x::Union{T, Complex{T}}, y::Union{T, Complex{T}}) where T = x + y
 @inline fsub(x::Union{T, Complex{T}}, y::Union{T, Complex{T}}) where T = x - y
+@inline fneg(x::Union{T, Complex{T}}) where T = -x

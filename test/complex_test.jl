@@ -4,185 +4,59 @@ using SIMDMath: fmul, fadd, fsub
 using SIMDMath: fmadd, fmsub, fnmadd, fnmsub
 using SIMDMath: ComplexVec, Vec
 
-p = complex.(ntuple(i->rand(), 2), ntuple(i->rand(), 2))
-p2 = complex.(ntuple(i->rand(), 2), ntuple(i->rand(), 2))
-pr = ntuple(i->rand(), 2)
-
-pc = SIMDMath.ComplexVec(p)
-pc2 = SIMDMath.ComplexVec(p2)
-pr1 = SIMDMath.Vec(pr)
-
-for (f, f2) in ((:fmul, :*), (:fadd, :+), (:fsub, :-))
-    @eval begin
-        # complex vec | complex vec
-        pcmul = $f(pc, pc2)
-        pmul = @. $f2(p, p2)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex vec | real vec
-        pcmul = $f(pc, pr1)
-        pmul = @. $f2(p, pr)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # real vec | complex vec
-        pcmul = $f(pr1, pc)
-        pmul = @. $f2(pr, p)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex vec | real scalar
-        pcmul = $f(pc, 1.2)
-        pmul = @. $f2(p, 1.2)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # real scalar | complex vec
-        pcmul = $f(1.5, pc)
-        pmul = @. $f2(1.5, p)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex scalar | complex vec
-        pcmul = $f(2.76 + 1.1im, pc)
-        pmul = @. $f2(2.76 + 1.1im, p)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex vec | complex scalar
-        pcmul = $f(pc, 4.76 + 1.12im)
-        pmul = @. $f2(p, 4.76 + 1.12im)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-    end
-end
-
+# define scalar functions
 mulsub(a, b, c) = a*b - c
 nmuladd(a, b, c) = -a*b + c
 nmulsub(a, b, c) = -a*b - c
 
+cvec1 = complex.(ntuple(i->rand(), 2), ntuple(i->rand(), 2))
+cvec2 = complex.(ntuple(i->rand(), 2), ntuple(i->rand()*(-1)^i, 2))
+cvec3 = complex.(ntuple(i->rand()*(-1)^i, 2), ntuple(i->rand()*(-1)^(2i), 2))
+
+rvec1 = ntuple(i->rand(), 2)
+rvec2 = ntuple(i->rand()*(-1)^(i), 2)
+rvec3 = ntuple(i->rand()*(-1)^(2i), 2)
+
+cscal1 = 1.2 + 1.3im
+cscal2 = 2.1 - 1.9im
+cscal3 = -3.1 - 3.4im
+
+rscal1 = 4.5
+rscal2 = -1.2
+rscal3 = 6.5
+
+for (f, f2) in ((:fmul, :*), (:fadd, :+), (:fsub, :-))
+    @eval begin
+        for a in ((cvec1, ComplexVec(cvec1)), (cvec2, ComplexVec(cvec2)), (cvec3, ComplexVec(cvec3)), (rvec1, Vec(rvec1)), (rvec2, Vec(rvec2)), (rvec3, Vec(rvec3)), (cscal1, cscal1), (cscal3, cscal3), (cscal3, cscal3), (rscal1, rscal1), (rscal2, rscal2), (rscal3, rscal3))
+            for b in ((cvec1, ComplexVec(cvec1)), (cvec2, ComplexVec(cvec2)), (cvec3, ComplexVec(cvec3)), (rvec1, Vec(rvec1)), (rvec2, Vec(rvec2)), (rvec3, Vec(rvec3)), (cscal1, cscal1), (cscal3, cscal3), (cscal3, cscal3), (rscal1, rscal1), (rscal2, rscal2), (rscal3, rscal3))
+
+                vec = $f(a[2], b[2])
+                scal = @. $f2(a[1], b[1])
+                @test vec[1] ≈ scal[1]
+                if length(scal) == 2
+                    @test vec[2] ≈ scal[2]
+                end
+            end
+        end
+    end
+end
+
 for (f, f2) in ((:fmadd, :muladd), (:fmsub, :mulsub), (:fnmadd, :nmuladd), (:fnmsub, :nmulsub))
     @eval begin
-        # complex vec | complex vec | complex vec
-        pcmul =$f(pc, pc2, pc)
-        pmul = $f2.(p, p2, p)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-    
-        # complex vec | real vec | complex vec
-        pcmul = $f(pc, pr1, pc)
-        pmul = $f2.(p, pr, p)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-        
-        # complex vec | real vec | real vec
-        pcmul = $f(pc, pr1, pr1)
-        pmul = $f2.(p, pr, pr)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
+        for a in ((cvec1, ComplexVec(cvec1)), (cvec2, ComplexVec(cvec2)), (cvec3, ComplexVec(cvec3)), (rvec1, Vec(rvec1)), (rvec2, Vec(rvec2)), (rvec3, Vec(rvec3)), (cscal1, cscal1), (cscal3, cscal3), (cscal3, cscal3), (rscal1, rscal1), (rscal2, rscal2), (rscal3, rscal3))
+            for b in ((cvec1, ComplexVec(cvec1)), (cvec2, ComplexVec(cvec2)), (cvec3, ComplexVec(cvec3)), (rvec1, Vec(rvec1)), (rvec2, Vec(rvec2)), (rvec3, Vec(rvec3)), (cscal1, cscal1), (cscal3, cscal3), (cscal3, cscal3), (rscal1, rscal1), (rscal2, rscal2), (rscal3, rscal3))
+                for c in ((cvec1, ComplexVec(cvec1)), (cvec2, ComplexVec(cvec2)), (cvec3, ComplexVec(cvec3)), (rvec1, Vec(rvec1)), (rvec2, Vec(rvec2)), (rvec3, Vec(rvec3)), (cscal1, cscal1), (cscal3, cscal3), (cscal3, cscal3), (rscal1, rscal1), (rscal2, rscal2), (rscal3, rscal3))
 
-        # real vec | complex vec | complex vec
-        pcmul = $f(pr1, pc, pc)
-        pmul = $f2.(pr, p, p)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
+                    vec = $f(a[2], b[2], c[2])
+                    scal = @. $f2(a[1], b[1], c[1])
+                    @test vec[1] ≈ scal[1]
+                    if length(scal) == 2
+                        @test vec[2] ≈ scal[2]
+                    end
 
-        # real vec | real vec | complex vec
-        pcmul = $f(pr1, pr1, pc)
-        pmul = $f2.(pr, pr, p)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex vec | complex vec | complex scalar
-        pcmul = $f(pc, pc, 1.1 + 1.4im)
-        pmul = $f2.(p, p, 1.1 + 1.4im)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex vec | complex scalar | complex vec
-        pcmul = $f(pc, 1.6 + 2.2im, pc)
-        pmul = $f2.(p, 1.6 + 2.2im, p)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex scalar | complex vec | complex vec
-        pcmul = $f(-5.8 + 1.3im, pc, pc)
-        pmul = $f2.(-5.8 + 1.3im, p, p)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex scalar | complex scalar | complex vec
-        pcmul = $f(9.2 - 1.1im, -1.3 + 1.5im, pc)
-        pmul = $f2.(9.2 - 1.1im, -1.3 + 1.5im, p)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex scalar | complex vec | complex scalar
-        pcmul = $f(9.2 - 1.1im, pc, -1.3 - 1.9im)
-        pmul = $f2.(9.2 - 1.1im, p, -1.3 - 1.9im)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex vec | complex vec | real scalar
-        pcmul = $f(pc, pc, -1.3)
-        pmul = $f2.(p, p, -1.3)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex vec | real scalar | real scalar
-        pcmul = $f(pc, 2.2, -1.3)
-        pmul = $f2.(p, 2.2, -1.3)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # real scalar | complex vec | real scalar
-        pcmul = $f(9.2, pc, -5.3)
-        pmul = $f2.(9.2, p, -5.3)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # real scalar | real scalar | complex vec
-        pcmul = $f(-12.2, 1.3, pc)
-        pmul = $f2.(-12.2, 1.3, p)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex scalar | real vec | real scalar
-        pcmul = $f(9.2 - 1.1im, pr1, -1.3)
-        pmul = $f2.(9.2 - 1.1im, pr, -1.3)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex scalar | real vec | real vec
-        pcmul = $f(9.2 - 1.1im, pr1, pr1)
-        pmul = $f2.(9.2 - 1.1im, pr, pr)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex vec | real vec | real scalar
-        pcmul = $f(pc, pr1, -1.9)
-        pmul = $f2.(p, pr, -1.9)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex scalar | real vec | real scalar
-        pcmul = $f(9.2 - 1.1im, pr1, -1.3)
-        pmul = $f2.(9.2 - 1.1im, pr, -1.3)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # real scalar | real vec | complex vec
-        pcmul = $f(3.2, pr1, pc)
-        pmul = $f2.(3.2, pr, p)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
-
-        # complex scalar | real vec | real scalar
-        pcmul = $f(9.2 - 1.1im, pr1, -1.3)
-        pmul = $f2.(9.2 - 1.1im, pr, -1.3)
-        @test pcmul[1] ≈ pmul[1]
-        @test pcmul[2] ≈ pmul[2]
+                end
+            end
+        end
     end
 end
 
