@@ -53,8 +53,6 @@ ComplexVec(z::NTuple{N, Complex{T}}) where {N, T <: FloatTypes} = ComplexVec(rea
 
 Base.convert(::Type{ComplexVec{N, T}}, z::ComplexVec{N, T}) where {N, T <: FloatTypes} = z
 Base.convert(::Type{ComplexVec{N, T}}, z::Complex{T}) where {N, T <: FloatTypes} = constantvector(z, ComplexVec{N, T})
-Base.convert(::Type{Vec{N, T}}, z::Complex{T}) where {N, T <: FloatTypes} = constantvector(z, ComplexVec{N, T})
 Base.convert(::Type{ComplexVec{N, T}}, x::T) where {N, T <: ScalarTypes} = ComplexVec{N, T}(constantvector(x, LVec{N, T}), constantvector(zero(T), LVec{N, T}))
 
 Base.promote_rule(::Type{ComplexVec{N, T}}, ::Type{Complex{T}}) where {N, T <: FloatTypes} = ComplexVec{N, T}
-Base.promote_rule(::Type{Vec{N, T}}, ::Type{Complex{T}}) where {N, T <: FloatTypes} = ComplexVec{N, T}

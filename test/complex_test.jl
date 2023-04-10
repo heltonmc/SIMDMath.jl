@@ -60,6 +60,8 @@ for (f, f2) in ((:fmadd, :muladd), (:fmsub, :mulsub), (:fnmadd, :nmuladd), (:fnm
     end
 end
 
+@test convert(ComplexVec{4, Float64}, 1.2) == ComplexVec{4, Float64}((1.2, 1.2, 1.2, 1.2), (0.0, 0.0, 0.0, 0.0))
+
 P1 = (1.1, 1.2, 1.4, 1.5, 1.3, 1.4, 1.5, 1.6, 1.7, 1.2, 1.2, 2.1, 3.1, 1.4, 1.5)
 P2 = (1.1, 1.2, 1.4, 1.53, 1.32, 1.41, 1.52, 1.64, 1.4, 1.0, 1.6, 2.5, 3.1, 1.9, 1.2)
 pp3 = pack_poly((P1, P2))
