@@ -2,6 +2,7 @@
 
 using SIMDMath: fmul, fadd, fsub
 using SIMDMath: fmadd, fmsub, fnmadd, fnmsub
+using SIMDMath: ComplexVec, Vec
 
 p = complex.(ntuple(i->rand(), 2), ntuple(i->rand(), 2))
 p2 = complex.(ntuple(i->rand(), 2), ntuple(i->rand(), 2))
@@ -114,6 +115,72 @@ for (f, f2) in ((:fmadd, :muladd), (:fmsub, :mulsub), (:fnmadd, :nmuladd), (:fnm
         # complex scalar | complex scalar | complex vec
         pcmul = $f(9.2 - 1.1im, -1.3 + 1.5im, pc)
         pmul = $f2.(9.2 - 1.1im, -1.3 + 1.5im, p)
+        @test pcmul[1] ≈ pmul[1]
+        @test pcmul[2] ≈ pmul[2]
+
+        # complex scalar | complex vec | complex scalar
+        pcmul = $f(9.2 - 1.1im, pc, -1.3 - 1.9im)
+        pmul = $f2.(9.2 - 1.1im, p, -1.3 - 1.9im)
+        @test pcmul[1] ≈ pmul[1]
+        @test pcmul[2] ≈ pmul[2]
+
+        # complex vec | complex vec | real scalar
+        pcmul = $f(pc, pc, -1.3)
+        pmul = $f2.(p, p, -1.3)
+        @test pcmul[1] ≈ pmul[1]
+        @test pcmul[2] ≈ pmul[2]
+
+        # complex vec | real scalar | real scalar
+        pcmul = $f(pc, 2.2, -1.3)
+        pmul = $f2.(p, 2.2, -1.3)
+        @test pcmul[1] ≈ pmul[1]
+        @test pcmul[2] ≈ pmul[2]
+
+        # real scalar | complex vec | real scalar
+        pcmul = $f(9.2, pc, -5.3)
+        pmul = $f2.(9.2, p, -5.3)
+        @test pcmul[1] ≈ pmul[1]
+        @test pcmul[2] ≈ pmul[2]
+
+        # real scalar | real scalar | complex vec
+        pcmul = $f(-12.2, 1.3, pc)
+        pmul = $f2.(-12.2, 1.3, p)
+        @test pcmul[1] ≈ pmul[1]
+        @test pcmul[2] ≈ pmul[2]
+
+        # complex scalar | real vec | real scalar
+        pcmul = $f(9.2 - 1.1im, pr1, -1.3)
+        pmul = $f2.(9.2 - 1.1im, pr, -1.3)
+        @test pcmul[1] ≈ pmul[1]
+        @test pcmul[2] ≈ pmul[2]
+
+        # complex scalar | real vec | real vec
+        pcmul = $f(9.2 - 1.1im, pr1, pr1)
+        pmul = $f2.(9.2 - 1.1im, pr, pr)
+        @test pcmul[1] ≈ pmul[1]
+        @test pcmul[2] ≈ pmul[2]
+
+        # complex vec | real vec | real scalar
+        pcmul = $f(pc, pr1, -1.9)
+        pmul = $f2.(p, pr, -1.9)
+        @test pcmul[1] ≈ pmul[1]
+        @test pcmul[2] ≈ pmul[2]
+
+        # complex scalar | real vec | real scalar
+        pcmul = $f(9.2 - 1.1im, pr1, -1.3)
+        pmul = $f2.(9.2 - 1.1im, pr, -1.3)
+        @test pcmul[1] ≈ pmul[1]
+        @test pcmul[2] ≈ pmul[2]
+
+        # real scalar | real vec | complex vec
+        pcmul = $f(3.2, pr1, pc)
+        pmul = $f2.(3.2, pr, p)
+        @test pcmul[1] ≈ pmul[1]
+        @test pcmul[2] ≈ pmul[2]
+
+        # complex scalar | real vec | real scalar
+        pcmul = $f(9.2 - 1.1im, pr1, -1.3)
+        pmul = $f2.(9.2 - 1.1im, pr, -1.3)
         @test pcmul[1] ≈ pmul[1]
         @test pcmul[2] ≈ pmul[2]
     end

@@ -71,3 +71,8 @@ end
 
 # -a*b - c
 @inline fnmsub(x, y, z) = fneg(fmadd(x, y, z))
+
+# scalar fallbacks
+@inline fmul(x::Complex{T}, y::Complex{T}) where T = x * y
+@inline fadd(x::Complex{T}, y::Complex{T}) where T = x + y
+@inline fsub(x::Complex{T}, y::Complex{T}) where T = x - y
