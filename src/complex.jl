@@ -49,6 +49,8 @@ for f in (:fmul, :fadd, :fsub)
     # promote complex numbers to constant complex vectors
     @eval @inline $f(x::Complex{T}, y::ComplexVec{N, T}) where {N, T <: FloatTypes} = $f(promote(x, y)...)
     @eval @inline $f(x::ComplexVec{N, T}, y::Complex{T}) where {N, T <: FloatTypes} = $f(promote(x, y)...)
+    @eval @inline $f(x::Complex{T}, y::Vec{N, T}) where {N, T <: FloatTypes} = $f(convert(ComplexVec{N, T}, x), y)
+    @eval @inline $f(x::Vec{N, T}, y::Complex{T}) where {N, T <: FloatTypes} = $f(x, convert(ComplexVec{N, T}, y))
 
     # promote real numbers to constant real vectors
     @eval @inline $f(x::T, y::ComplexVec{N, T}) where {N, T <: FloatTypes} = $f(convert(Vec{N, T}, x), y)
@@ -73,6 +75,6 @@ end
 @inline fnmsub(x, y, z) = fneg(fmadd(x, y, z))
 
 # scalar fallbacks
-@inline fmul(x::Complex{T}, y::Complex{T}) where T = x * y
-@inline fadd(x::Complex{T}, y::Complex{T}) where T = x + y
-@inline fsub(x::Complex{T}, y::Complex{T}) where T = x - y
+@inline fmul(x::Union{T, Complex{T}}, y::Union{T, Complex{T}}) where T = x * y
+@inline fadd(x::Union{T, Complex{T}}, y::Union{T, Complex{T}}) where T = x + y
+@inline fsub(x::Union{T, Complex{T}}, y::Union{T, Complex{T}}) where T = x - y

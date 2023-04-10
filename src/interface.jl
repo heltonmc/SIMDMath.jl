@@ -9,14 +9,20 @@
 for f in (:fmadd, :fmsub, :fnmadd, :fnmsub)
     @eval begin
         @inline $f(x::Vec{N, T}, y::Vec{N, T}, z::Vec{N, T}) where {N, T <: FloatTypes} = Vec($f(x.data, y.data, z.data))
-        @inline $f(x::ScalarOrVec{N, T}, y::ScalarOrVec{N, T}, z::ScalarOrVec{N, T}) where {N, T <: FloatTypes} = $f(promote(x, y, z)...)
+        @inline $f(x::Vec{N, T}, y::Vec{N, T}, z::T) where {N, T <: FloatTypes} = $f(promote(x, y, z)...)
+        @inline $f(x::Vec{N, T}, y::T, z::T) where {N, T <: FloatTypes} = $f(promote(x, y, z)...)
+        @inline $f(x::T, y::Vec{N, T}, z::Vec{N, T}) where {N, T <: FloatTypes} = $f(promote(x, y, z)...)
+        @inline $f(x::T, y::Vec{N, T}, z::T) where {N, T <: FloatTypes} = $f(promote(x, y, z)...)
+        @inline $f(x::Vec{N, T}, y::T, z::Vec{N, T}) where {N, T <: FloatTypes} = $f(promote(x, y, z)...)
+        @inline $f(x::T, y::T, z::Vec{N, T}) where {N, T <: FloatTypes} = $f(promote(x, y, z)...)
     end
 end
 
 for f in (:fadd, :fsub, :fmul, :fdiv)
     @eval begin
         @inline $f(x::Vec{N, T}, y::Vec{N, T}) where {N, T <: FloatTypes} = Vec($f(x.data, y.data))
-        @inline $f(x::ScalarOrVec{N, T}, y::ScalarOrVec{N, T}) where {N, T <: FloatTypes} = $f(promote(x, y)...)
+        @inline $f(x::Vec{N, T}, y::T) where {N, T <: FloatTypes} = $f(promote(x, y)...)
+        @inline $f(x::T, y::Vec{N, T}) where {N, T <: FloatTypes} = $f(promote(x, y)...)
     end
 end
 
