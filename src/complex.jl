@@ -21,41 +21,61 @@ end
     i = fmul(x.im, y.data)
     return ComplexVec(r, i)
 end
+@inline fmul(x::Vec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}) where {N, FloatTypes} = fmul(y, x)
 
 # Complex add / subtract
 for f in (:fadd, :fsub)
     @eval begin
         @inline function $f(x::ComplexVec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}) where {N, FloatTypes}
-            re = $f(x.re, y.re)
-            im = $f(x.im, y.im)
-            return ComplexVec(re, im)
+            r = $f(x.re, y.re)
+            i = $f(x.im, y.im)
+            return ComplexVec(r, i)
         end
         @inline function $f(x::ComplexVec{N, FloatTypes}, y::Vec{N, FloatTypes}) where {N, FloatTypes}
-            re = $f(x.re, y.data)
-            return ComplexVec(re, x.im)
+            r = $f(x.re, y.data)
+            return ComplexVec(r, x.im)
         end
     end
 end
 
-# Argument symmetry
-for f in (:fmul, :fadd, :fsub)
-    @eval @inline $f(x::Vec{N, T}, y::ComplexVec{N, T}) where {N, T <: FloatTypes} = $f(y, x)
+@inline fadd(x::Vec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}) where {N, FloatTypes} = fadd(y, x)
+
+@inline function fsub(x::Vec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}) where {N, FloatTypes}
+    r = fsub(x.data, y.re)
+    return ComplexVec(r, fneg(y.im))
 end
+
+for f in (:fmul, :fadd, :fsub)
+    # promote complex numbers to constant complex vectors
+    @eval @inline $f(x::Complex{T}, y::ComplexVec{N, T}) where {N, T <: FloatTypes} = $f(promote(x, y)...)
+    @eval @inline $f(x::ComplexVec{N, T}, y::Complex{T}) where {N, T <: FloatTypes} = $f(promote(x, y)...)
+    @eval @inline $f(x::Complex{T}, y::Vec{N, T}) where {N, T <: FloatTypes} = $f(convert(ComplexVec{N, T}, x), y)
+    @eval @inline $f(x::Vec{N, T}, y::Complex{T}) where {N, T <: FloatTypes} = $f(x, convert(ComplexVec{N, T}, y))
+
+    # promote real numbers to constant real vectors
+    @eval @inline $f(x::T, y::ComplexVec{N, T}) where {N, T <: FloatTypes} = $f(convert(Vec{N, T}, x), y)
+    @eval @inline $f(x::ComplexVec{N, T}, y::T) where {N, T <: FloatTypes} = $f(x, convert(Vec{N, T}, y))
+end
+
+@inline fneg(x::ComplexVec{N, T}) where {N, T <: FloatTypes} = ComplexVec{N, T}(fneg(x.re), fneg(x.im))
 
 # complex multiply-add
 # a*b + c
-@inline fmadd(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes} = fadd(fmul(x, y), z)
+@inline fmadd(x, y, z) = fadd(fmul(x, y), z)
 
 # complex multiply-subtract
 # a*b - c
-@inline fmsub(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes} = fsub(fmul(x, y), z)
+@inline fmsub(x, y, z) = fsub(fmul(x, y), z)
 
 # complex negated multiply-add
 # -a*b + c
-@inline fnmadd(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes} = fsub(z, fmul(x, y))
+@inline fnmadd(x, y, z) = fsub(z, fmul(x, y))
 
 # -a*b - c
-@inline function fnmsub(x::ComplexorRealVec{N, T}, y::ComplexorRealVec{N, T}, z::ComplexorRealVec{N, T}) where {N, T <: FloatTypes}
-    a = fmadd(x, y, z)
-    return ComplexVec{N, T}(fneg(a.re), fneg(a.im))
-end
+@inline fnmsub(x, y, z) = fneg(fmadd(x, y, z))
+
+# scalar fallbacks
+@inline fmul(x::Union{T, Complex{T}}, y::Union{T, Complex{T}}) where T = x * y
+@inline fadd(x::Union{T, Complex{T}}, y::Union{T, Complex{T}}) where T = x + y
+@inline fsub(x::Union{T, Complex{T}}, y::Union{T, Complex{T}}) where T = x - y
+@inline fneg(x::Union{T, Complex{T}}) where T = -x

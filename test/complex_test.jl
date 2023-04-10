@@ -1,144 +1,77 @@
 # test complex
 
-let
-    p = complex.(ntuple(i->rand(), 2), ntuple(i->rand(), 2))
-    p2 = complex.(ntuple(i->rand(), 2), ntuple(i->rand(), 2))
-    pr = ntuple(i->rand(), 2)
+using SIMDMath: fmul, fadd, fsub
+using SIMDMath: fmadd, fmsub, fnmadd, fnmsub
+using SIMDMath: ComplexVec, Vec
 
-    pc = SIMDMath.ComplexVec(p)
-    pc2 = SIMDMath.ComplexVec(p2)
-    pr1 = SIMDMath.Vec(pr)
+# define scalar functions
+mulsub(a, b, c) = a*b - c
+nmuladd(a, b, c) = -a*b + c
+nmulsub(a, b, c) = -a*b - c
 
-    # multiply
+cvec1 = complex.(ntuple(i->rand(), 2), ntuple(i->rand(), 2))
+cvec2 = complex.(ntuple(i->rand(), 2), ntuple(i->rand()*(-1)^i, 2))
+cvec3 = complex.(ntuple(i->rand()*(-1)^i, 2), ntuple(i->rand()*(-1)^(2i), 2))
 
-    pcmul = SIMDMath.fmul(pc, pc2)
-    pmul = p .* p2
-    @test pcmul.re[1].value ≈ pmul[1].re
-    @test pcmul.im[1].value ≈ pmul[1].im
-    @test pcmul.re[2].value ≈ pmul[2].re
-    @test pcmul.im[2].value ≈ pmul[2].im
+rvec1 = ntuple(i->rand(), 2)
+rvec2 = ntuple(i->rand()*(-1)^(i), 2)
+rvec3 = ntuple(i->rand()*(-1)^(2i), 2)
 
-    pcmul = SIMDMath.fmul(pc, pr1)
-    @test pcmul == SIMDMath.fmul(pr1, pc)
-    pmul = p .* pr
-    @test pcmul.re[1].value ≈ pmul[1].re
-    @test pcmul.im[1].value ≈ pmul[1].im
-    @test pcmul.re[2].value ≈ pmul[2].re
-    @test pcmul.im[2].value ≈ pmul[2].im
-    
-    # add
+cscal1 = 1.2 + 1.3im
+cscal2 = 2.1 - 1.9im
+cscal3 = -3.1 - 3.4im
 
-    pcmul = SIMDMath.fadd(pc, pc2)
-    pmul = p .+ p2
-    @test pcmul.re[1].value ≈ pmul[1].re
-    @test pcmul.im[1].value ≈ pmul[1].im
-    @test pcmul.re[2].value ≈ pmul[2].re
-    @test pcmul.im[2].value ≈ pmul[2].im
+rscal1 = 4.5
+rscal2 = -1.2
+rscal3 = 6.5
 
-    pcmul = SIMDMath.fadd(pc, pr1)
-    @test pcmul == SIMDMath.fadd(pr1, pc)
-    pmul = p .+ pr
-    @test pcmul.re[1].value ≈ pmul[1].re
-    @test pcmul.im[1].value ≈ pmul[1].im
-    @test pcmul.re[2].value ≈ pmul[2].re
-    @test pcmul.im[2].value ≈ pmul[2].im
+for (f, f2) in ((:fmul, :*), (:fadd, :+), (:fsub, :-))
+    @eval begin
+        for a in ((cvec1, ComplexVec(cvec1)), (cvec2, ComplexVec(cvec2)), (cvec3, ComplexVec(cvec3)), (rvec1, Vec(rvec1)), (rvec2, Vec(rvec2)), (rvec3, Vec(rvec3)), (cscal1, cscal1), (cscal3, cscal3), (cscal3, cscal3), (rscal1, rscal1), (rscal2, rscal2), (rscal3, rscal3))
+            for b in ((cvec1, ComplexVec(cvec1)), (cvec2, ComplexVec(cvec2)), (cvec3, ComplexVec(cvec3)), (rvec1, Vec(rvec1)), (rvec2, Vec(rvec2)), (rvec3, Vec(rvec3)), (cscal1, cscal1), (cscal3, cscal3), (cscal3, cscal3), (rscal1, rscal1), (rscal2, rscal2), (rscal3, rscal3))
 
-    # subtract
-
-    pcmul = SIMDMath.fsub(pc, pc2)
-    pmul = p .- p2
-    @test pcmul.re[1].value ≈ pmul[1].re
-    @test pcmul.im[1].value ≈ pmul[1].im
-    @test pcmul.re[2].value ≈ pmul[2].re
-    @test pcmul.im[2].value ≈ pmul[2].im
-
-    pcmul = SIMDMath.fsub(pc, pr1)
-    @test pcmul == SIMDMath.fsub(pr1, pc)
-    pmul = p .- pr
-    @test pcmul.re[1].value ≈ pmul[1].re
-    @test pcmul.im[1].value ≈ pmul[1].im
-    @test pcmul.re[2].value ≈ pmul[2].re
-    @test pcmul.im[2].value ≈ pmul[2].im
-
-    # multiply add
-
-    pcmul = SIMDMath.fmadd(pc, pc2, pc)
-    pmul = muladd.(p, p2, p)
-    @test pcmul.re[1].value ≈ pmul[1].re
-    @test pcmul.im[1].value ≈ pmul[1].im
-    @test pcmul.re[2].value ≈ pmul[2].re
-    @test pcmul.im[2].value ≈ pmul[2].im
-
-    pcmul = SIMDMath.fmadd(pc, pr1, pc)
-    @test pcmul == SIMDMath.fmadd(pr1, pc, pc)
-    pmul = muladd.(p, pr, p)
-    @test pcmul.re[1].value ≈ pmul[1].re
-    @test pcmul.im[1].value ≈ pmul[1].im
-    @test pcmul.re[2].value ≈ pmul[2].re
-    @test pcmul.im[2].value ≈ pmul[2].im
-
-    pcmul = SIMDMath.fmadd(pc, pr1, pr1)
-    pmul = muladd.(p, pr, pr)
-    @test pcmul.re[1].value ≈ pmul[1].re
-    @test pcmul.im[1].value ≈ pmul[1].im
-    @test pcmul.re[2].value ≈ pmul[2].re
-    @test pcmul.im[2].value ≈ pmul[2].im
-
-    # multiply subtract
-
-    pcmul = SIMDMath.fmsub(pc, pc2, pc)
-    pmul = @. p*p2 - p
-    @test pcmul.re[1].value ≈ pmul[1].re
-    @test pcmul.im[1].value ≈ pmul[1].im
-    @test pcmul.re[2].value ≈ pmul[2].re
-    @test pcmul.im[2].value ≈ pmul[2].im
-
-    pcmul = SIMDMath.fmsub(pc, pr1, pc)
-    @test pcmul == SIMDMath.fmsub(pr1, pc, pc)
-    pmul = @. p*pr - p
-    @test pcmul.re[1].value ≈ pmul[1].re
-    @test pcmul.im[1].value ≈ pmul[1].im
-    @test pcmul.re[2].value ≈ pmul[2].re
-    @test pcmul.im[2].value ≈ pmul[2].im
-
-    pcmul = SIMDMath.fmsub(pc, pr1, pr1)
-    pmul = @. p*pr - pr
-    @test pcmul.re[1].value ≈ pmul[1].re
-    @test pcmul.im[1].value ≈ pmul[1].im
-    @test pcmul.re[2].value ≈ pmul[2].re
-    @test pcmul.im[2].value ≈ pmul[2].im
-
-    # complex negated multiply-add
-    # -a*b + c
-    pcmul = SIMDMath.fnmadd(pc, pc2, pc)
-    pmul = @. -p*p2 + p
-    @test pcmul.re[1].value ≈ pmul[1].re
-    @test pcmul.im[1].value ≈ pmul[1].im
-    @test pcmul.re[2].value ≈ pmul[2].re
-    @test pcmul.im[2].value ≈ pmul[2].im
-
-    # -a*b - c
-    pcmul = SIMDMath.fnmsub(pc, pc2, pc)
-    pmul = @. -p*p2 - p
-    @test pcmul.re[1].value ≈ pmul[1].re
-    @test pcmul.im[1].value ≈ pmul[1].im
-    @test pcmul.re[2].value ≈ pmul[2].re
-    @test pcmul.im[2].value ≈ pmul[2].im
-
-
-    P1 = (1.1, 1.2, 1.4, 1.5, 1.3, 1.4, 1.5, 1.6, 1.7, 1.2, 1.2, 2.1, 3.1, 1.4, 1.5)
-    P2 = (1.1, 1.2, 1.4, 1.53, 1.32, 1.41, 1.52, 1.64, 1.4, 1.0, 1.6, 2.5, 3.1, 1.9, 1.2)
-    pp3 = pack_poly((P1, P2))
-    z = 1.2 + 1.1im
-    s = horner_simd(z, pp3)
-    e = evalpoly(z, P1)
-
-    @test s.re[1].value == e.re
-    @test s.im[1].value == e.im
-
-    e = evalpoly(z, P2)
-    @test s.re[2].value == e.re
-    @test s.im[2].value == e.im
-
-    
+                vec = $f(a[2], b[2])
+                scal = @. $f2(a[1], b[1])
+                @test vec[1] ≈ scal[1]
+                if length(scal) == 2
+                    @test vec[2] ≈ scal[2]
+                end
+            end
+        end
+    end
 end
+
+for (f, f2) in ((:fmadd, :muladd), (:fmsub, :mulsub), (:fnmadd, :nmuladd), (:fnmsub, :nmulsub))
+    @eval begin
+        for a in ((cvec1, ComplexVec(cvec1)), (cvec2, ComplexVec(cvec2)), (cvec3, ComplexVec(cvec3)), (rvec1, Vec(rvec1)), (rvec2, Vec(rvec2)), (rvec3, Vec(rvec3)), (cscal1, cscal1), (cscal3, cscal3), (cscal3, cscal3), (rscal1, rscal1), (rscal2, rscal2), (rscal3, rscal3))
+            for b in ((cvec1, ComplexVec(cvec1)), (cvec2, ComplexVec(cvec2)), (cvec3, ComplexVec(cvec3)), (rvec1, Vec(rvec1)), (rvec2, Vec(rvec2)), (rvec3, Vec(rvec3)), (cscal1, cscal1), (cscal3, cscal3), (cscal3, cscal3), (rscal1, rscal1), (rscal2, rscal2), (rscal3, rscal3))
+                for c in ((cvec1, ComplexVec(cvec1)), (cvec2, ComplexVec(cvec2)), (cvec3, ComplexVec(cvec3)), (rvec1, Vec(rvec1)), (rvec2, Vec(rvec2)), (rvec3, Vec(rvec3)), (cscal1, cscal1), (cscal3, cscal3), (cscal3, cscal3), (rscal1, rscal1), (rscal2, rscal2), (rscal3, rscal3))
+
+                    vec = $f(a[2], b[2], c[2])
+                    scal = @. $f2(a[1], b[1], c[1])
+                    @test vec[1] ≈ scal[1]
+                    if length(scal) == 2
+                        @test vec[2] ≈ scal[2]
+                    end
+
+                end
+            end
+        end
+    end
+end
+
+@test convert(ComplexVec{4, Float64}, 1.2) == ComplexVec{4, Float64}((1.2, 1.2, 1.2, 1.2), (0.0, 0.0, 0.0, 0.0))
+
+P1 = (1.1, 1.2, 1.4, 1.5, 1.3, 1.4, 1.5, 1.6, 1.7, 1.2, 1.2, 2.1, 3.1, 1.4, 1.5)
+P2 = (1.1, 1.2, 1.4, 1.53, 1.32, 1.41, 1.52, 1.64, 1.4, 1.0, 1.6, 2.5, 3.1, 1.9, 1.2)
+pp3 = pack_poly((P1, P2))
+z = 1.2 + 1.1im
+s = horner_simd(z, pp3)
+e = evalpoly(z, P1)
+
+@test s[1].re == e.re
+@test s[1].im == e.im
+
+e = evalpoly(z, P2)
+@test s[2].re == e.re
+@test s[2].im == e.im
