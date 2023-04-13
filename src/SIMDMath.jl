@@ -11,6 +11,8 @@ module SIMDMath
 
 using Base: llvmcall, VecElement
 
+using Base.Cartesian: @ntuple
+
 export horner_simd, pack_poly
 export horner, pack_horner
 
