@@ -49,7 +49,19 @@ end
 const ComplexOrRealVec{N, T} = Union{Vec{N, T}, ComplexVec{N, T}}
 
 ComplexVec(x::NTuple{N, T}, y::NTuple{N, T}) where {N, T <: FloatTypes} = ComplexVec(LVec{N, T}(x), LVec{N, T}(y))
-ComplexVec(z::NTuple{N, Complex{T}}) where {N, T <: FloatTypes} = ComplexVec(real.(z), imag.(z))
+
+@inline @generated function ComplexVec(z::NTuple{N, Complex{T}}) where {N, T <: FloatTypes}
+    len = 2*N
+    lenm1 = len - 1
+    return :(
+        begin
+            x = LVec{$len, T}(@ntuple $N i -> (reim(z[i])...))
+            b = shufflevector(x, Val(0:2:$lenm1))
+            c = shufflevector(x, Val(1:2:$lenm1))
+            return ComplexVec{$N, T}(b, c)
+        end
+    )
+end
 
 Base.convert(::Type{ComplexVec{N, T}}, z::ComplexVec{N, T}) where {N, T <: FloatTypes} = z
 Base.convert(::Type{ComplexVec{N, T}}, z::Complex{T}) where {N, T <: FloatTypes} = constantvector(z, ComplexVec{N, T})
