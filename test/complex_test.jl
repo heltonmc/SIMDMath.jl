@@ -71,6 +71,20 @@ let
     @test cconj[2] == conj(c[2])
 end
 
+# test horizontal reduction
+let 
+    for N in (2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 14, 16, 17)
+        x = ntuple(i -> (complex(rand(), rand())), N)
+        xvec = ComplexVec(x)
+        @test sum(x) ≈ SIMDMath.fhadd(xvec)
+        @test reduce(*, x) ≈ SIMDMath.fhmul(xvec)
+
+        # test real case
+        @test sum(real.(x)) ≈ SIMDMath.fhadd(Vec(xvec.re))
+        @test reduce(*, real.(x)) ≈ SIMDMath.fhmul(Vec(xvec.re))
+    end
+end
+
 P1 = (1.1, 1.2, 1.4, 1.5, 1.3, 1.4, 1.5, 1.6, 1.7, 1.2, 1.2, 2.1, 3.1, 1.4, 1.5)
 P2 = (1.1, 1.2, 1.4, 1.53, 1.32, 1.41, 1.52, 1.64, 1.4, 1.0, 1.6, 2.5, 3.1, 1.9, 1.2)
 pp3 = pack_poly((P1, P2))
