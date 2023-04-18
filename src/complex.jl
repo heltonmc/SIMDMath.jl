@@ -83,17 +83,28 @@ end
 # conjugate
 @inline Base.conj(z::ComplexVec{N, FloatTypes}) where {N, FloatTypes} = ComplexVec{N, FloatTypes}(z.re, fneg(z.im))
 
-# horizontal reduction
+# complex horizontal reduction
+@inline fhadd(z::ComplexVec{2, FloatTypes}) where FloatTypes = z[1] + z[2]
+@inline fhmul(z::ComplexVec{2, FloatTypes}) where FloatTypes = z[1] * z[2]
 
-@inline reduce_fadd(z::ComplexVec{2, FloatTypes}) where FloatTypes = z[1] + z[2]
-
-@inline function reduce_fadd(z::ComplexVec{N, FloatTypes}) where {N, FloatTypes}
+@inline function fhadd(z::ComplexVec{N, FloatTypes}) where {N, FloatTypes}
     if ispow2(N)
         a = ComplexVec(shufflevector(z.re, Val(0:N÷2-1)), shufflevector(z.im, Val(0:N÷2-1)))
         b = ComplexVec(shufflevector(z.re, Val(N÷2:N-1)), shufflevector(z.im, Val(N÷2:N-1)))
         c = fadd(a, b)
-        return reduce_fadd(c)
+        return fhadd(c)
     else
-        return sum(ntuple(i -> z[i], Val(N)))
+        return reduce(+, ntuple(i -> z[i], Val(N)))
+    end
+end
+
+@inline function fhmul(z::ComplexVec{N, FloatTypes}) where {N, FloatTypes}
+    if ispow2(N)
+        a = ComplexVec(shufflevector(z.re, Val(0:N÷2-1)), shufflevector(z.im, Val(0:N÷2-1)))
+        b = ComplexVec(shufflevector(z.re, Val(N÷2:N-1)), shufflevector(z.im, Val(N÷2:N-1)))
+        c = fmul(a, b)
+        return fhmul(c)
+    else
+        return reduce(*, ntuple(i -> z[i], Val(N)))
     end
 end

@@ -37,3 +37,28 @@ Base.@propagate_inbounds function Base.getindex(v::ComplexVec{N, T}, i::IntegerT
     @boundscheck checkbounds(v, i)
     return complex(extractelement(v.re, i-1), extractelement(v.im, i-1))
 end
+
+# horizontal reduction
+@inline fhadd(z::Vec{2, FloatTypes}) where FloatTypes = z[1] + z[2]
+@inline fhmul(z::Vec{2, FloatTypes}) where FloatTypes = z[1] * z[2]
+
+@inline function fhadd(z::Vec{N, FloatTypes}) where {N, FloatTypes}
+    if ispow2(N)
+        a = Vec(shufflevector(z.data, Val(0:N÷2-1)))
+        b = Vec(shufflevector(z.data, Val(N÷2:N-1)))
+        c = fadd(a, b)
+        return fhadd(c)
+    else
+        return reduce(+, ntuple(i -> z[i], Val(N)))
+    end
+end
+@inline function fhmul(z::Vec{N, FloatTypes}) where {N, FloatTypes}
+    if ispow2(N)
+        a = Vec(shufflevector(z.data, Val(0:N÷2-1)))
+        b = Vec(shufflevector(z.data, Val(N÷2:N-1)))
+        c = fmul(a, b)
+        return fhmul(c)
+    else
+        return reduce(*, ntuple(i -> z[i], Val(N)))
+    end
+end
