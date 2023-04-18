@@ -79,3 +79,6 @@ end
 @inline fadd(x::Union{T, Complex{T}}, y::Union{T, Complex{T}}) where T = x + y
 @inline fsub(x::Union{T, Complex{T}}, y::Union{T, Complex{T}}) where T = x - y
 @inline fneg(x::Union{T, Complex{T}}) where T = -x
+
+# conjugate
+@inline Base.conj(z::ComplexVec{N, FloatTypes}) where {N, FloatTypes} = ComplexVec{N, FloatTypes}(z.re, fneg(z.im))
