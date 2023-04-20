@@ -63,6 +63,14 @@ end
 # a*b + c
 @inline fmadd(x, y, z) = fadd(fmul(x, y), z)
 
+@inline function fmadd(x::ComplexVec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}, z::ComplexVec{N, FloatTypes}) where {N, FloatTypes}
+    r = fmadd(x.re, y.re, z.re)
+    i = fmadd(x.re, y.im, z.im)
+    i = fmadd(x.im, y.re, i)
+    r = fnmadd(x.im, y.im, r)
+    return ComplexVec(r, i)
+end
+
 # complex multiply-subtract
 # a*b - c
 @inline fmsub(x, y, z) = fsub(fmul(x, y), z)
