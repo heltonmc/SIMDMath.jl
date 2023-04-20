@@ -82,6 +82,7 @@ end
 
 # conjugate
 @inline Base.conj(z::ComplexVec{N, FloatTypes}) where {N, FloatTypes} = ComplexVec{N, FloatTypes}(z.re, fneg(z.im))
+@inline Base.conj(z::Vec{N, FloatTypes}) where {N, FloatTypes} = z
 
 # complex horizontal reduction
 @inline fhadd(z::ComplexVec{2, FloatTypes}) where FloatTypes = z[1] + z[2]

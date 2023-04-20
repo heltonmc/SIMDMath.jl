@@ -23,5 +23,6 @@ include("intrinsics.jl")
 include("interface.jl")
 include("complex.jl")
 include("horner.jl")
+include("linearalgebra.jl")
 
 end
