@@ -39,6 +39,8 @@ Base.@propagate_inbounds function Base.getindex(v::ComplexVec{N, T}, i::IntegerT
 end
 
 # horizontal reduction
+@inline fhadd(z::Vec{1, FloatTypes}) where FloatTypes = z[1]
+@inline fhmul(z::Vec{1, FloatTypes}) where FloatTypes = z[1]
 @inline fhadd(z::Vec{2, FloatTypes}) where FloatTypes = z[1] + z[2]
 @inline fhmul(z::Vec{2, FloatTypes}) where FloatTypes = z[1] * z[2]
 

@@ -120,6 +120,8 @@ end
 @inline Base.conj(z::Vec{N, FloatTypes}) where {N, FloatTypes} = z
 
 # complex horizontal reduction
+@inline fhadd(z::ComplexVec{1, FloatTypes}) where FloatTypes = z[1]
+@inline fhmul(z::ComplexVec{1, FloatTypes}) where FloatTypes = z[1]
 @inline fhadd(z::ComplexVec{2, FloatTypes}) where FloatTypes = z[1] + z[2]
 @inline fhmul(z::ComplexVec{2, FloatTypes}) where FloatTypes = z[1] * z[2]
 
