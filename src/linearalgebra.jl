@@ -1,4 +1,4 @@
-@inline dot(x::NTuple{N, T}, y::NTuple{N, T}) where {N, T <: Union{Float16, ComplexF16}} = dot(x, y, N < 64 ? Val(8) : Val(16))
+@inline dot(x::NTuple{N, T}, y::NTuple{N, T}) where {N, T <: Union{Float16, ComplexF16}} = dot(x, y, N < 128 ? Val(8) : Val(16))
 @inline dot(x::NTuple{N, T}, y::NTuple{N, T}) where {N, T <: Union{Float32, ComplexF32}} = dot(x, y, N < 64 ? Val(4) : Val(8))
 @inline dot(x::NTuple{N, T}, y::NTuple{N, T}) where {N, T <: Union{Float64, ComplexF64}} = dot(x, y, N < 64 ? Val(2) : Val(4))
 
