@@ -101,6 +101,24 @@ end
     i = fmadd(x.im, y.re, i)
     return ComplexVec(r, i)
 end
+@inline function fmsub(x::ComplexVec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}, z::Vec{N, FloatTypes}) where {N, FloatTypes}
+    r = fmsub(x.re, y.re, z.data)
+    i = fmul(x.re, y.im)
+    r = fnmadd(x.im, y.im, r)
+    i = fmadd(x.im, y.re, i)
+    return ComplexVec(r, i)
+end
+@inline function fmsub(x::ComplexVec{N, FloatTypes}, y::Vec{N, FloatTypes}, z::Vec{N, FloatTypes}) where {N, FloatTypes}
+    r = fmsub(x.re, y.data, z.data)
+    i = fmul(x.im, y.data)
+    return ComplexVec(r, i)
+end
+@inline function fmsub(x::ComplexVec{N, FloatTypes}, y::Vec{N, FloatTypes}, z::ComplexVec{N, FloatTypes}) where {N, FloatTypes}
+    r = fmsub(x.re, y.data, z.re)
+    i = fmsub(x.im, y.data, z.im)
+    return ComplexVec(r, i)
+end
+@inline fmsub(x::Vec{N, FloatTypes}, y::ComplexVec{N, FloatTypes}, z) where {N, FloatTypes} = fmsub(y, x, z)
 
 # complex negated multiply-add
 # -a*b + c
