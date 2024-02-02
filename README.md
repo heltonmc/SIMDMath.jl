@@ -37,7 +37,7 @@ function test(x)
 ```
 This structure is advantageous for vectorizing as `p1`, `p2`, `p3`, and `p4` are independent, require same number of evaluations, and coefficients are statically known.
 However, we are relying on the auto-vectorizer to make sure this happens which is very fragile. In general, two polynomials might auto-vectorizer depending on how the values are used but is not reliable.
-We can check that this function is not vectorizing (though it may on some architectures) by using `@code_llvm test(1.1)` and/or `@code_native(1.1)`.
+We can check that this function is not vectorizing (though it may on some architectures) by using `@code_llvm test(1.1)` and/or `@code_native test(1.1)`.
 
 Another way to test this is to benchmark this function and compare to the time to compute a single polynomial.
 ```julia
@@ -157,7 +157,7 @@ BenchmarkTools.Trial: 10000 samples with 1000 evaluations.
  Memory estimate: 0 bytes, allocs estimate: 0.
 
 # SIMD version evaluating two polynomials...
-julia> const P2 =  SIMDMath.pack_horner(((1.2, 1.2, 1.3, 1.5, 1.6, 1.8, 1.9, 2.1, 2.2, 2.3, 2.5, 1.3, 1.5, 1.6, 1.8, 1.9, 2.1, 2.2), (2.4, 1.3, 1.5, 1.6, 1.8, 1.9, 2.1, 2.2, 2.1, 2.6, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8)))
+julia> const P2 =  SIMDMath.pack_poly(((1.2, 1.2, 1.3, 1.5, 1.6, 1.8, 1.9, 2.1, 2.2, 2.3, 2.5, 1.3, 1.5, 1.6, 1.8, 1.9, 2.1, 2.2), (2.4, 1.3, 1.5, 1.6, 1.8, 1.9, 2.1, 2.2, 2.1, 2.6, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8)))
 ((VecElement{Float64}(1.2), VecElement{Float64}(2.4)), (VecElement{Float64}(1.2), VecElement{Float64}(1.3)), (VecElement{Float64}(1.3), VecElement{Float64}(1.5)), (VecElement{Float64}(1.5), VecElement{Float64}(1.6)), (VecElement{Float64}(1.6), VecElement{Float64}(1.8)), (VecElement{Float64}(1.8), VecElement{Float64}(1.9)), (VecElement{Float64}(1.9), VecElement{Float64}(2.1)), (VecElement{Float64}(2.1), VecElement{Float64}(2.2)), (VecElement{Float64}(2.2), VecElement{Float64}(2.1)), (VecElement{Float64}(2.3), VecElement{Float64}(2.6)), (VecElement{Float64}(2.5), VecElement{Float64}(2.1)), (VecElement{Float64}(1.3), VecElement{Float64}(2.2)), (VecElement{Float64}(1.5), VecElement{Float64}(2.3)), (VecElement{Float64}(1.6), VecElement{Float64}(2.4)), (VecElement{Float64}(1.8), VecElement{Float64}(2.5)), (VecElement{Float64}(1.9), VecElement{Float64}(2.6)), (VecElement{Float64}(2.1), VecElement{Float64}(2.7)), (VecElement{Float64}(2.2), VecElement{Float64}(2.8)))
 
 julia> @benchmark SIMDMath.clenshaw_simd(x, P2) setup=(x=rand())

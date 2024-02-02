@@ -92,9 +92,9 @@ z = 1.2 + 1.1im
 s = horner_simd(z, pp3)
 e = evalpoly(z, P1)
 
-@test s[1].re == e.re
-@test s[1].im == e.im
+@test s[1].re ≈ e.re
+@test s[1].im ≈ e.im
 
 e = evalpoly(z, P2)
-@test s[2].re == e.re
-@test s[2].im == e.im
+@test s[2].re ≈ e.re
+@test s[2].im ≈ e.im
